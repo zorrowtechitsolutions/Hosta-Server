@@ -10,6 +10,8 @@ import errorHandler from "./Middlewares/ErrorHandler";
 import cookieParser from "cookie-parser";
 import hospitalRoutes from "./Routes/HospitalRoute";
 import AmbulanceRoutes from "./Routes/AmbulanceRoutes";
+import BloodDonarRoutes from "./Routes/BloodDonarRoutes";
+
 
 const app = express();
 
@@ -60,13 +62,14 @@ app.use("/api", userRoutes);
 app.use("/api", commenRoutes);
 app.use("/api", hospitalRoutes);
 app.use("/api", AmbulanceRoutes);
+app.use("/api", BloodDonarRoutes);
 
 connectToDb();
 
 app.use(errorHandler);
 
 app.listen(process.env.Port, () => {
-  console.log("App is running");
+  console.log(`App is running  https://localhost:${process.env.Port}`);
 });
 
 export default app;
