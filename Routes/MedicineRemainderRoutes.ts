@@ -20,6 +20,8 @@ router.get("/medicines/:id", trycatch( getSingleMedicine ));
 router.put("/medicines/:id", trycatch( updateMedicine ));
 router.put("/medicines/:id/status", trycatch( editMedicineStatus ));
 router.delete("/medicines/:id", trycatch( deleteMedicine ));
+// router.get("/medicines/check-missed", trycatch( alaram ));
+
 
 
 export default router;

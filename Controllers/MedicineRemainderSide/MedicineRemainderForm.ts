@@ -300,3 +300,36 @@ export const editMedicineStatus = async (req: Request, res: Response): Promise<R
   });
 };
 
+
+//  export const alaram = async (req: Request, res: Response): Promise<any> => {
+
+//   const now = moment();
+//   const medicines = await MedicineRemainder.find({ reminder: true });
+
+//   let anyMissed = false;
+
+//   for (const medicine of medicines) {
+//     for (const dateEntry of medicine.dates) {
+//       if (moment(dateEntry.date).format("YYYY-MM-DD") !== now.format("YYYY-MM-DD")) continue;
+
+//       for (const timeEntry of dateEntry.times) {
+//         const scheduledTime = moment(timeEntry.time, "h:mm a").set({
+//           year: now.year(),
+//           month: now.month(),
+//           date: now.date(),
+//         });
+
+//         const diffInMinutes = now.diff(scheduledTime, "minutes");
+
+//         if (diffInMinutes >= 4 && timeEntry.status === "missed") {
+//           anyMissed = true;
+//           break;
+//         }
+//       }
+//     }
+
+//     if (anyMissed) break;
+//   }
+
+//   res.json({ missed: anyMissed });
+// };
