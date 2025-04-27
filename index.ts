@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./Config/.env" });
+import cron from 'node-cron';
+
 
 import express from "express";
 import cors from "cors";
@@ -11,6 +13,10 @@ import cookieParser from "cookie-parser";
 import hospitalRoutes from "./Routes/HospitalRoute";
 import AmbulanceRoutes from "./Routes/AmbulanceRoutes";
 import BloodDonarRoutes from "./Routes/BloodDonarRoutes";
+import MedicineRemainderRoutes from "./Routes/MedicineRemainderRoutes";
+import LabRoutes from "./Routes/LabRoutes";
+import {  checkMissedDoses, checkAndRefillMedicines  } from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
+
 
 
 const app = express();
@@ -53,6 +59,12 @@ app.use(
 // );
 
 
+// Schedule the job to run every 1 minute
+cron.schedule('* * * * *', async () => {
+  await checkMissedDoses();
+  await checkAndRefillMedicines(); 
+});
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -63,13 +75,18 @@ app.use("/api", commenRoutes);
 app.use("/api", hospitalRoutes);
 app.use("/api", AmbulanceRoutes);
 app.use("/api", BloodDonarRoutes);
+app.use("/api", MedicineRemainderRoutes);
+app.use("/api", LabRoutes);
+
+
+
 
 connectToDb();
 
 app.use(errorHandler);
 
 app.listen(process.env.Port, () => {
-  console.log(`App is running  https://localhost:${process.env.Port}`);
+  console.log(`App is running  http://localhost:${process.env.Port}`);
 });
 
 export default app;
