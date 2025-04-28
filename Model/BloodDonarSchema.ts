@@ -8,7 +8,7 @@ export interface IBloodDonor extends Document {
   bloodGroup: "O+" | "O-" | "AB+" | "AB-" | "A+" | "A-" | "B+" | "B-";
   address: {
     place: string;
-    pincode: number;
+    pincode: number; // keep as number
   };
   lastDonationDate?: Date | null;
 }
@@ -28,7 +28,7 @@ const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
       type: String,
       required: true,
       unique: true,
-      match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
+      match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"], // Only 10 digits
     },
     age: {
       type: Number,
@@ -42,7 +42,7 @@ const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
     },
     address: {
       place: { type: String, required: true },
-      pincode: { type: Number, required: true },
+      pincode: { type: Number, required: true }, // corrected to Number
     },
     lastDonationDate: { type: Date, default: null },
   },

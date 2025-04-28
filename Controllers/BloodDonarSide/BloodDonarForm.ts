@@ -5,16 +5,53 @@ import createError from "http-errors";
 
 // ✅ Create a Donor
 export const createDonor = async (req: Request, res: Response): Promise<Response> => {
-    const { name, email, phone, age, bloodGroup, address, lastDonationDate } = req.body;
-  
+  try {
+    const { name, email, phone, age, bloodGroup, address, lastDonationDate } = req.body.newDonor;
+
+
+    // Check if donor already exists by email
     const exists = await BloodDonor.findOne({ email });
-    if (exists) throw new createError.Conflict("Email already exists");
-  
-    const donor = new BloodDonor({ name, email, phone, age, bloodGroup, address, lastDonationDate });
+    if (exists) {
+      throw new createError.Conflict("Email already exists");
+    }
+
+    // Validate phone number - remove starting 0 if needed
+    const cleanedPhone = phone.startsWith("0") ? phone.slice(1) : phone;
+    if (!/^\d{10}$/.test(cleanedPhone)) {
+      throw new createError.BadRequest("Phone number must be exactly 10 digits");
+    }
+
+    const donor = new BloodDonor({
+      name,
+      email,
+      phone: cleanedPhone,
+      age,
+      bloodGroup,
+      address,
+      lastDonationDate,
+    });
+
     await donor.save();
-  
-    return res.status(201).json({ message: "Donor created successfully", donor });
-  };
+
+    return res.status(201).json({
+      message: "Donor created successfully",
+      donor,
+      status: 201,
+    });
+  } catch (error: any) {
+
+    if (error.code === 11000) {
+      // MongoDB duplicate key error
+      return res.status(409).json({ message: "Email or phone already exists", status: 409 });
+    }
+
+    // Other errors
+    const statusCode = error.status || 500;
+    const message = error.message || "Internal Server Error";
+    return res.status(statusCode).json({ message, status: statusCode });
+  }
+};
+
   
   // 🔍 Get All Donors (with pagination & search)
   export const getDonors = async (req: Request, res: Response): Promise<Response> => {
@@ -22,6 +59,7 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
     // demo
     // /api/donors?search=a&bloodGroup=O+&pincode=123456
 
+    
     const query: any = {
       $or: [
         { name: { $regex: search, $options: "i" } },
@@ -32,8 +70,8 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
     };
   
     if (bloodGroup) query.bloodGroup = bloodGroup;
-    if (pincode) query["address.pincode"] = +pincode;
-    if (place) query["address.place"] = +place;
+    if (pincode) query["address.pincode"] = pincode;
+    if (place) query["address.place"] = place;
 
   
     const donors = await BloodDonor.find(query)
@@ -41,6 +79,7 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
       .limit(+limit)
       .sort({ createdAt: -1 });
   
+      
     const total = await BloodDonor.countDocuments(query);
   
     return res.status(200).json({ donors, total, page: +page, totalPages: Math.ceil(total / +limit) });

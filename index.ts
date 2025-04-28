@@ -27,6 +27,7 @@ app.use(
       process.env.UserSide_URL as string,
       process.env.AmbulanceSide_URL as string,
       process.env.HospitalSide_URL as string,
+      "http://localhost:5173"
     ],
     credentials: true,
   })
