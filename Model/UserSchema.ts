@@ -18,14 +18,21 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
       minlength: 8,
     },
+    // phone: {
+    //   type: String,
+    //   unique: true,
+    //   match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
+    // },
     phone: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true, // <-- Add this line
       match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
+    },
+    picture: {
+      type: String,
     },
   },
   { timestamps: true }
