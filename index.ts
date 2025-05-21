@@ -1,7 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./Config/.env" });
 import cron from "node-cron";
-
+import session from "express-session";
+import passport from "passport";
+import authRoutes from "./Routes/AuthRoutes";
+import "./Config/passport"; 
 import express from "express";
 import cors from "cors";
 import connectToDb from "./Config/dbConnection";
@@ -69,6 +72,29 @@ cron.schedule("* * * * *", async () => {
 app.use(express.json());
 app.use(cookieParser());
 
+app.use(
+  session({
+    secret: "your-secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use("/auth", authRoutes); // route prefix for auth
+
+app.get("/", (req, res) => {
+  res.send(`<a href="/auth/google">Login with Google</a>`);
+});
+
+app.get("/profile", (req, res) => {
+  res.send(`<pre>${JSON.stringify(req.user, null, 2)}</pre>`);
+});
+
+
+
 // Fix route paths with leading '/'
 app.use("/api", userRoutes);
 app.use("/api", commenRoutes);
@@ -87,3 +113,8 @@ app.listen(process.env.Port, () => {
 });
 
 export default app;
+
+
+
+
+

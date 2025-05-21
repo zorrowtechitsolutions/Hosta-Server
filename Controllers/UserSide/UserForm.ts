@@ -74,108 +74,24 @@ interface User {
   __v: number;
 }
 
-// export const userLogin = async (
-//   req: Request,
-//   res: Response
-// ): Promise<Response> => {
-//   const { email, password, name, picture } = req.body;
+export const userLogin = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { email, password } = req.body;
   
-//   const user: User | null = await User.findOne({ email: email });
-//   if (user === null) {
-//     throw new HttpError.NotFound("You email is not found, Please Register");
-//   }
-//   const passwordCheck = await bcrypt.compare(password, user.password);
-//   if (!passwordCheck) {
-//     throw new HttpError.BadRequest("Incorrect password, try again!");
-//   }
-//   const jwtSecret = process.env.JWT_SECRET;
-
-//   if (!jwtSecret) {
-//     throw new Error("JWT_SECRET is not defined");
-//   }
-
-//   const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
-//     expiresIn: "15m",
-//   });
-
-//   const refreshToken = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
-//     expiresIn: "7d",
-//   });
-
-//   const sevenDayInMs = 7 * 24 * 60 * 60 * 1000;
-//   const expirationDate = new Date(Date.now() + sevenDayInMs);
-//   res.cookie("refreshToken", refreshToken, {
-//     httpOnly: true,
-//     expires: expirationDate,
-//     secure: true,
-//     sameSite: "none",
-//   });
-
-//   return res.status(200).json({
-//     status: "Success",
-//     token: token,
-//     data: user,
-//     message: "You logged in successfully.",
-//   });
-// };
-
-export const userLogin = async (req: Request, res: Response): Promise<Response> => {
-  const { email, password, name, picture } = req.body;
-  const jwtSecret = process.env.JWT_SECRET;
-  
-
-  if (!jwtSecret) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-
-  // Case 1: Google Login (no password but has name and picture)
-  if (!password && name && picture) {
-    let user = await User.findOne({ email });
-
-    // If user doesn't exist, create a new Google user
-    if (!user) {
-      user = new User({
-        email,
-        name,
-        picture,
-      });
-      await user.save();
-    }
-
-    // Generate JWT tokens
-    const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
-      expiresIn: "15m",
-    });
-
-    const refreshToken = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
-      expiresIn: "7d",
-    });
-
-    const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      expires: expirationDate,
-      secure: true,
-      sameSite: "none",
-    });
-
-    return res.status(200).json({
-      status: "Success",
-      token,
-      data: user,
-      message: user.isNew ? "Account created via Google" : "Google login successful",
-    });
-  }
-
-  // Case 2: Manual Login
-
-   const user: User | null = await User.findOne({ email: email });
+  const user: User | null = await User.findOne({ email: email });
   if (user === null) {
     throw new HttpError.NotFound("You email is not found, Please Register");
   }
   const passwordCheck = await bcrypt.compare(password, user.password);
   if (!passwordCheck) {
     throw new HttpError.BadRequest("Incorrect password, try again!");
+  }
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is not defined");
   }
 
   const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
@@ -186,7 +102,8 @@ export const userLogin = async (req: Request, res: Response): Promise<Response> 
     expiresIn: "7d",
   });
 
-  const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const sevenDayInMs = 7 * 24 * 60 * 60 * 1000;
+  const expirationDate = new Date(Date.now() + sevenDayInMs);
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     expires: expirationDate,
@@ -196,11 +113,94 @@ export const userLogin = async (req: Request, res: Response): Promise<Response> 
 
   return res.status(200).json({
     status: "Success",
-    token,
+    token: token,
     data: user,
     message: "You logged in successfully.",
   });
 };
+
+// export const userLogin = async (req: Request, res: Response): Promise<Response> => {
+//   const { email, password, name, picture } = req.body;
+//   const jwtSecret = process.env.JWT_SECRET;
+  
+
+//   if (!jwtSecret) {
+//     throw new Error("JWT_SECRET is not defined");
+//   }
+
+//   // Case 1: Google Login (no password but has name and picture)
+//   if (!password && name && picture) {
+//     let user = await User.findOne({ email });
+
+//     // If user doesn't exist, create a new Google user
+//     if (!user) {
+//       user = new User({
+//         email,
+//         name,
+//         picture,
+//       });
+//       await user.save();
+//     }
+
+//     // Generate JWT tokens
+//     const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//       expiresIn: "15m",
+//     });
+
+//     const refreshToken = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//       expiresIn: "7d",
+//     });
+
+//     const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+//     res.cookie("refreshToken", refreshToken, {
+//       httpOnly: true,
+//       expires: expirationDate,
+//       secure: true,
+//       sameSite: "none",
+//     });
+
+//     return res.status(200).json({
+//       status: "Success",
+//       token,
+//       data: user,
+//       message: user.isNew ? "Account created via Google" : "Google login successful",
+//     });
+//   }
+
+//   // Case 2: Manual Login
+
+//    const user: User | null = await User.findOne({ email: email });
+//   if (user === null) {
+//     throw new HttpError.NotFound("You email is not found, Please Register");
+//   }
+//   const passwordCheck = await bcrypt.compare(password, user.password);
+//   if (!passwordCheck) {
+//     throw new HttpError.BadRequest("Incorrect password, try again!");
+//   }
+
+//   const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//     expiresIn: "15m",
+//   });
+
+//   const refreshToken = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//     expiresIn: "7d",
+//   });
+
+//   const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+//   res.cookie("refreshToken", refreshToken, {
+//     httpOnly: true,
+//     expires: expirationDate,
+//     secure: true,
+//     sameSite: "none",
+//   });
+
+//   return res.status(200).json({
+//     status: "Success",
+//     token,
+//     data: user,
+//     message: "You logged in successfully.",
+//   });
+// };
 
 
 
