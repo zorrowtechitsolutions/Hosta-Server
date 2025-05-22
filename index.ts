@@ -29,7 +29,7 @@ app.use(
     origin: [
       process.env.UserSide_URL as string,
       process.env.AmbulanceSide_URL as string,
-      process.env.HospitalSide_URL as string
+      process.env.HospitalSide_URL as string,
     ],
     credentials: true,
   })
@@ -111,4 +111,3 @@ app.listen(process.env.Port, () => {
 });
 
 export default app;
-
