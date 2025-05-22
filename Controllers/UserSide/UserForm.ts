@@ -81,7 +81,6 @@ export const userLogin = async (
   const { email, password } = req.body;
   
   const user: User | null = await User.findOne({ email: email });
-
   if (user === null) {
     throw new HttpError.NotFound("You email is not found, Please Register");
   }
@@ -171,7 +170,6 @@ export const userLogin = async (
 //   // Case 2: Manual Login
 
 //    const user: User | null = await User.findOne({ email: email });
-
 //   if (user === null) {
 //     throw new HttpError.NotFound("You email is not found, Please Register");
 //   }
@@ -203,6 +201,7 @@ export const userLogin = async (
 //     message: "You logged in successfully.",
 //   });
 // };
+
 
 
 
