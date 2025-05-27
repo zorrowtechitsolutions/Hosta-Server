@@ -6,7 +6,7 @@ import createError from "http-errors";
 // ✅ Create a Donor
 export const createDonor = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { name, email, phone, age, bloodGroup, address, lastDonationDate } = req.body.newDonor;
+    const { name, email, phone, age, bloodGroup, address, lastDonationDate,  userId } = req.body.newDonor;
 
 
     // Check if donor already exists by email
@@ -29,6 +29,7 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
       bloodGroup,
       address,
       lastDonationDate,
+       userId
     });
 
     await donor.save();
@@ -96,6 +97,19 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
   
     return res.status(200).json(donor);
   }; 
+
+    // 📄 Get  Donor id
+  export const getDonorId = async (req: Request, res: Response): Promise<Response> => {
+    const { id } = req.params;
+  
+    if (!id) throw new createError.BadRequest("Invalid donor ID");
+  
+    const donor = await BloodDonor.findById({userId: id});
+    if (!donor) throw new createError.NotFound("Donor not found");
+  
+    return res.status(200).json(donor);
+  }; 
+  
   
   // 📝 Update Donor
   export const updateDonor = async (req: Request, res: Response): Promise<Response> => {
