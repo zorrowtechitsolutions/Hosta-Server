@@ -1,6 +1,7 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema , Types} from "mongoose";
 
 export interface IBloodDonor extends Document {
+  userId: Types.ObjectId;
   name: string;
   email: string;
   phone: string;
@@ -34,6 +35,11 @@ const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
       type: Number,
       required: true,
       min: [18, "You must be at least 18 years old to donate blood"],
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     bloodGroup: {
       type: String,
