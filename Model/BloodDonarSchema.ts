@@ -1,45 +1,49 @@
-import mongoose, { Document, Schema , Types} from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IBloodDonor extends Document {
   userId: Types.ObjectId;
-  name: string;
-  email: string;
   phone: string;
-  age: number;
+  dateOfBirth: Date;
   bloodGroup: "O+" | "O-" | "AB+" | "AB-" | "A+" | "A-" | "B+" | "B-";
   address: {
     place: string;
-    pincode: number; // keep as number
+    pincode: number;
   };
   lastDonationDate?: Date | null;
 }
 
 const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
   {
-    name: { type: String, required: true, trim: true },
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-      lowercase: true,
-      match: [/\S+@\S+\.\S+/, "Please enter a valid email address"],
-    },
     phone: {
       type: String,
       required: true,
       unique: true,
-      match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"], // Only 10 digits
-    },
-    age: {
-      type: Number,
-      required: true,
-      min: [18, "You must be at least 18 years old to donate blood"],
+      match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    dateOfBirth: {
+      type: Date,
+      required: true,
+      validate: {
+        validator: function (dob: Date) {
+          const today = new Date();
+          const age = today.getFullYear() - dob.getFullYear();
+          const monthDiff = today.getMonth() - dob.getMonth();
+          const dayDiff = today.getDate() - dob.getDate();
+
+          // Adjust age if birth date hasn't occurred this year yet
+          if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            return age - 1 >= 18;
+          }
+
+          return age >= 18;
+        },
+        message: "You must be at least 18 years old to donate blood",
+      },
     },
     bloodGroup: {
       type: String,
@@ -48,7 +52,7 @@ const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
     },
     address: {
       place: { type: String, required: true },
-      pincode: { type: Number, required: true }, // corrected to Number
+      pincode: { type: Number, required: true },
     },
     lastDonationDate: { type: Date, default: null },
   },

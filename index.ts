@@ -17,10 +17,10 @@ import AmbulanceRoutes from "./Routes/AmbulanceRoutes";
 import BloodDonarRoutes from "./Routes/BloodDonarRoutes";
 import MedicineRemainderRoutes from "./Routes/MedicineRemainderRoutes";
 import LabRoutes from "./Routes/LabRoutes";
-import {
-  checkMissedDoses,
-  checkAndRefillMedicines,
-} from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
+// import {
+//   checkMissedDoses,
+//   checkAndRefillMedicines,
+// } from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
 
 const app = express();
 
@@ -62,10 +62,10 @@ app.use(
 // );
 
 // Schedule the job to run every 1 minute
-cron.schedule("* * * * *", async () => {
-  await checkMissedDoses();
-  await checkAndRefillMedicines();
-});
+// cron.schedule("* * * * *", async () => {
+//   await checkMissedDoses();
+//   await checkAndRefillMedicines();
+// });
 
 app.use(express.json());
 app.use(cookieParser());
