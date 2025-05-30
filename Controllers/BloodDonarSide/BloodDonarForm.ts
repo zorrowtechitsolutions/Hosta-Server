@@ -9,7 +9,7 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
     const { name, email, phone, age, bloodGroup, address, lastDonationDate,  userId } = req.body.newDonor;
 
 
-    // Check if donor already exists by email
+    // Check if donor already exists by email 
     const exists = await BloodDonor.findOne({ email });
     if (exists) {
       throw new createError.Conflict("Email already exists");
