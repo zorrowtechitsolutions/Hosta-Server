@@ -4,32 +4,41 @@ import createError from "http-errors";
 
 
 // ✅ Create a Donor
-export const createDonor = async (req: Request, res: Response): Promise<Response> => {
+export const createDonor = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const { name, email, phone, age, bloodGroup, address, lastDonationDate,  userId } = req.body.newDonor;
+    const {
+      phone,
+      dateOfBirth,
+      bloodGroup,
+      address,
+      lastDonationDate,
+      userId,
+    } = req.body.newDonor;
 
-
-    // Check if donor already exists by email 
-    const exists = await BloodDonor.findOne({ email });
+    // Check if donor already exists by email
+    const exists = await BloodDonor.findOne({ phone });
     if (exists) {
-      throw new createError.Conflict("Email already exists");
+      throw new createError.Conflict("Phone already exists");
     }
 
     // Validate phone number - remove starting 0 if needed
     const cleanedPhone = phone.startsWith("0") ? phone.slice(1) : phone;
     if (!/^\d{10}$/.test(cleanedPhone)) {
-      throw new createError.BadRequest("Phone number must be exactly 10 digits");
+      throw new createError.BadRequest(
+        "Phone number must be exactly 10 digits"
+      );
     }
 
     const donor = new BloodDonor({
-      name,
-      email,
       phone: cleanedPhone,
-      age,
+      dateOfBirth,
       bloodGroup,
       address,
       lastDonationDate,
-       userId
+      userId,
     });
 
     await donor.save();
@@ -40,10 +49,11 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
       status: 201,
     });
   } catch (error: any) {
-
     if (error.code === 11000) {
       // MongoDB duplicate key error
-      return res.status(409).json({ message: "Email or phone already exists", status: 409 });
+      return res
+        .status(409)
+        .json({ message: "Email or phone already exists", status: 409 });
     }
 
     // Other errors
@@ -55,12 +65,21 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
 
   
   // 🔍 Get All Donors (with pagination & search)
-  export const getDonors = async (req: Request, res: Response): Promise<Response> => {
-    const { page = 1, limit = 10, search = "", bloodGroup, pincode, place } = req.query;
+  export const getDonors = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      bloodGroup,
+      pincode,
+      place,
+    } = req.query;
     // demo
     // /api/donors?search=a&bloodGroup=O+&pincode=123456
 
-    
     const query: any = {
       $or: [
         { name: { $regex: search, $options: "i" } },
@@ -69,21 +88,27 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
         { "address.place": { $regex: search, $options: "i" } },
       ],
     };
-  
+
     if (bloodGroup) query.bloodGroup = bloodGroup;
     if (pincode) query["address.pincode"] = pincode;
     if (place) query["address.place"] = place;
 
-  
     const donors = await BloodDonor.find(query)
+      .populate("userId")
       .skip((+page - 1) * +limit)
       .limit(+limit)
       .sort({ createdAt: -1 });
-  
-      
+
     const total = await BloodDonor.countDocuments(query);
-  
-    return res.status(200).json({ donors, total, page: +page, totalPages: Math.ceil(total / +limit) });
+
+    return res
+      .status(200)
+      .json({
+        donors,
+        total,
+        page: +page,
+        totalPages: Math.ceil(total / +limit),
+      });
   };
   
   // 📄 Get Single Donor
@@ -99,16 +124,19 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
   }; 
 
     // 📄 Get  Donor id
-  export const getDonorId = async (req: Request, res: Response): Promise<Response> => {
-    const { id } = req.params;
-  
-    if (!id) throw new createError.BadRequest("Invalid donor ID");
-  
-    const donor = await BloodDonor.findById({userId: id});
-    if (!donor) throw new createError.NotFound("Donor not found");
-  
-    return res.status(200).json(donor);
-  }; 
+    export const getDonorId = async (
+      req: Request,
+      res: Response
+    ): Promise<Response> => {
+      const { id } = req.params;
+
+      if (!id) throw new createError.BadRequest("Invalid donor ID");
+
+      const donor = await BloodDonor.findById({ userId: id });
+      if (!donor) throw new createError.NotFound("Donor not found");
+
+      return res.status(200).json(donor);
+    };
   
   
   // 📝 Update Donor
