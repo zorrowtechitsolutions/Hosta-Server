@@ -1,10 +1,12 @@
 import express from "express";
 import {
   deleteReview,
+  deleteUser,
   editReview,
   getHospitals,
   postReview,
   resetPassword,
+  updateUserData,
   userData,
   userLogin,
   userRegister,
@@ -17,6 +19,8 @@ const userRoutes = express.Router();
 userRoutes.post("/users/registeration", trycatch(userRegister));
 userRoutes.post("/users/login", trycatch(userLogin));
 userRoutes.post("/users/password", Auth, trycatch(resetPassword));
+userRoutes.put("/users", Auth, trycatch(updateUserData));
+userRoutes.delete("/users", Auth, trycatch(deleteUser));
 userRoutes.get("/users", Auth, trycatch(userData));
 userRoutes.get("/hospitals", trycatch(getHospitals));
 userRoutes.post("/reviews/:id", Auth, trycatch(postReview));

@@ -6,6 +6,8 @@ import Jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../../Model/UserSchema";
 import { ObjectId } from "mongodb";
 import Hospital from "../../Model/HospitalSchema";
+import { use } from "passport";
+import { error } from "console";
 
 // Joi schema to validate the Registration data of users
 const joiSchema = Joi.object({
@@ -79,7 +81,7 @@ export const userLogin = async (
   res: Response
 ): Promise<Response> => {
   const { email, password } = req.body;
-  
+
   const user: User | null = await User.findOne({ email: email });
   if (user === null) {
     throw new HttpError.NotFound("You email is not found, Please Register");
@@ -120,7 +122,6 @@ export const userLogin = async (
 };
 
 // Get user data
-
 export const userData = async (
   req: Request,
   res: Response
@@ -141,6 +142,67 @@ export const userData = async (
   return res.status(200).json({
     status: "success",
     data: data,
+  });
+};
+
+//Update User Data
+export const updateUserData = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { phone, name } = req.body;
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    throw new HttpError.Unauthorized("Please login!");
+  }
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is not defined");
+  }
+
+  const { id } = Jwt.verify(token, jwtSecret) as JwtPayload;
+  const user = await User.findById(id);
+  if (!user) {
+    throw new HttpError.NotFound("User not found!");
+  }
+  user.phone = phone as string;
+  user.name = name as string;
+  user.save();
+
+  return res.status(200).json({
+    status: "Success",
+    Message: "Data Updated Successfully",
+  });
+};
+
+// Delete User Profile
+export const deleteUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    throw new HttpError.Unauthorized("Please login!");
+  }
+  const jwtKey = process.env.JWT_SECRET;
+  if (!jwtKey) {
+    throw new Error("JWT_SECRET is not defined");
+  }
+
+  const { id } = Jwt.verify(token, jwtKey) as JwtPayload;
+  await User.findByIdAndDelete(id);
+  if (req.cookies.refreshToken) {
+    const expirationDate = new Date(0);
+    res.cookie("refreshToken", "", {
+      httpOnly: true,
+      expires: expirationDate,
+      secure: true,
+      sameSite: "none",
+    });
+  }
+  return res.status(204).json({
+    status: "Success",
+    message: "User profile deleted successfully",
   });
 };
 
@@ -166,7 +228,7 @@ export const getHospitals = async (
   res: Response
 ): Promise<Response> => {
   console.log("Sample from native");
-  
+
   const hospitals = await Hospital.find().populate({
     path: "reviews.user_id",
     select: "name email",
