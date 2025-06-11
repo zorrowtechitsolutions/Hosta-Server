@@ -151,16 +151,7 @@ export const updateUserData = async (
   res: Response
 ): Promise<Response> => {
   const { phone, name } = req.body;
-  const token = req.cookies.refreshToken;
-  if (!token) {
-    throw new HttpError.Unauthorized("Please login!");
-  }
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-
-  const { id } = Jwt.verify(token, jwtSecret) as JwtPayload;
+  const { id } = req.params;
   const user = await User.findById(id);
   if (!user) {
     throw new HttpError.NotFound("User not found!");
@@ -180,16 +171,7 @@ export const deleteUser = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const token = req.cookies.refreshToken;
-  if (!token) {
-    throw new HttpError.Unauthorized("Please login!");
-  }
-  const jwtKey = process.env.JWT_SECRET;
-  if (!jwtKey) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-
-  const { id } = Jwt.verify(token, jwtKey) as JwtPayload;
+  const { id } = req.params;
   await User.findByIdAndDelete(id);
   if (req.cookies.refreshToken) {
     const expirationDate = new Date(0);
