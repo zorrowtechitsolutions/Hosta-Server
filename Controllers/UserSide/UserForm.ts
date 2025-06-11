@@ -158,7 +158,7 @@ export const updateUserData = async (
   }
   user.phone = phone as string;
   user.name = name as string;
-  user.save();
+  await user.save();
 
   return res.status(200).json({
     status: "Success",
