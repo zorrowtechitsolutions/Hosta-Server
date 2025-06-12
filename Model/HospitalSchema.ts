@@ -23,10 +23,10 @@ const specialtySchema = new Schema({
   doctors: [doctorSchema],
 });
 
+// user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
 // Review Schema
 const reviewSchema = new Schema({
-  // user_id: { type: String, ref: "User", required: true },
-  user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  user_id: { type: String, ref: "User", required: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
   comment: { type: String },
   date: { type: String },
