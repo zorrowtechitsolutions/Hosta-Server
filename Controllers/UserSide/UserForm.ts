@@ -6,8 +6,9 @@ import Jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../../Model/UserSchema";
 import { ObjectId } from "mongodb";
 import Hospital from "../../Model/HospitalSchema";
-import { use } from "passport";
-import { error } from "console";
+// import { use } from "passport";
+// import { error } from "console";
+import mongoose from "mongoose";
 
 // Joi schema to validate the Registration data of users
 const joiSchema = Joi.object({
@@ -224,12 +225,27 @@ export const postReview = async (
   const { user_id, rating, comment, date } = req.body;
   const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(user_id)) {
+    throw new HttpError.BadRequest("Invalid user ID format.");
+  }
+
   const hospital = await Hospital.findById(id);
   if (!hospital) {
     throw new HttpError.NotFound("Hospital not found");
   }
 
-  hospital.reviews.push({ user_id, rating, comment, date });
+  // Ensure user exists (optional but good practice)
+  const user = await User.findById(user_id);
+  if (!user) {
+    throw new HttpError.NotFound("User not found");
+  }
+
+  hospital.reviews.push({
+    user_id: new mongoose.Types.ObjectId(user_id),
+    rating,
+    comment,
+    date,
+  });
 
   await hospital.save();
   const updatedHospital = await hospital.populate({
@@ -249,16 +265,19 @@ export const editReview = async (
 ): Promise<Response> => {
   const { hospital_id, reviewId } = req.params;
   const { rating, comment } = req.body;
+
   const hospital = await Hospital.findById(hospital_id);
   if (!hospital) {
     throw new HttpError.NotFound("Hospital not found");
   }
+
   const index = hospital.reviews.findIndex(
     (element) => element._id.toString() === reviewId
   );
   if (index === -1) {
     throw new HttpError.NotFound("Review not found");
   }
+
   hospital.reviews[index].rating = rating;
   hospital.reviews[index].comment = comment;
   hospital.reviews[index].date = new Date().toISOString();
@@ -269,6 +288,7 @@ export const editReview = async (
     path: "reviews.user_id",
     select: "name email",
   });
+
   return res.status(200).json({
     message: "Review updated successfully",
     data: updatedHospital,
@@ -284,6 +304,7 @@ export const deleteReview = async (
   if (!hospital) {
     throw new HttpError.NotFound("Hospital not found");
   }
+
   const index = hospital.reviews.findIndex(
     (element) => element._id.toString() === reviewId
   );
@@ -292,13 +313,13 @@ export const deleteReview = async (
   }
 
   hospital.reviews.splice(index, 1);
-
   await hospital.save();
 
   const updatedHospital = await hospital.populate({
     path: "reviews.user_id",
     select: "name email",
   });
+
   return res.status(200).json({
     message: "Review deleted successfully",
     data: updatedHospital,
