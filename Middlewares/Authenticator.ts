@@ -4,13 +4,15 @@ import jwt from "jsonwebtoken";
 
 const Auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    console.log(token);
-    
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-      throw new createError.Unauthorized("No token provided. Please login.");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new createError.Unauthorized(
+        "No or invalid token format. Please login."
+      );
     }
+
+    const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
 
