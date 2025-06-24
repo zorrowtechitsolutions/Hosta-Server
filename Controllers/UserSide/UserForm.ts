@@ -183,7 +183,7 @@ export const deleteUser = async (
       sameSite: "none",
     });
   }
-  return res.status(204).json({
+  return res.status(200).json({
     status: "Success",
     message: "User profile deleted successfully",
   });
