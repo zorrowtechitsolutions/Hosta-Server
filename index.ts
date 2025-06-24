@@ -4,7 +4,7 @@ import cron from "node-cron";
 import session from "express-session";
 import passport from "passport";
 import authRoutes from "./Routes/AuthRoutes";
-import "./Config/passport"; 
+import "./Config/passport";
 import express from "express";
 import cors from "cors";
 import connectToDb from "./Config/dbConnection";
@@ -30,10 +30,12 @@ app.use(
       process.env.UserSide_URL as string,
       process.env.AmbulanceSide_URL as string,
       process.env.HospitalSide_URL as string,
+      process.env.playstoretest as string,
     ],
     credentials: true,
   })
 );
+
 
 // app.use(
 //   cors({
@@ -91,8 +93,6 @@ app.get("/profile", (req, res) => {
   res.send(`<pre>${JSON.stringify(req.user, null, 2)}</pre>`);
 });
 
-
-
 // Fix route paths with leading '/'
 app.use("/api", userRoutes);
 app.use("/api", commenRoutes);
@@ -108,6 +108,7 @@ app.use(errorHandler);
 
 app.listen(process.env.Port, () => {
   console.log(`App is running  http://localhost:${process.env.Port}`);
+  
 });
 
 export default app;
