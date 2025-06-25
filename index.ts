@@ -31,6 +31,7 @@ app.use(
       process.env.AmbulanceSide_URL as string,
       process.env.HospitalSide_URL as string,
       process.env.playstoretest as string,
+      "https://thasleem-mk.github.io/playstoreSupport",
     ],
     credentials: true,
   })
