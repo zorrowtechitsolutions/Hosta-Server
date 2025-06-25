@@ -31,6 +31,7 @@ app.use(
       process.env.AmbulanceSide_URL as string,
       process.env.HospitalSide_URL as string,
       process.env.Playstoretest as string,
+      "https://playstore-support.vercel.app",
     ],
     credentials: true,
   })
