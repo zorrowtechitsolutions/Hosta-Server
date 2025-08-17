@@ -71,7 +71,7 @@ export const createDonor = async (
   ): Promise<Response> => {
     const {
       page = 1,
-      limit = 10,
+      // limit = 10,
       search = "",
       bloodGroup,
       pincode,
@@ -96,7 +96,7 @@ export const createDonor = async (
     const donors = await BloodDonor.find(query)
       .populate("userId")
       .skip((+page - 1) * +limit)
-      .limit(+limit)
+      // .limit(+limit)
       .sort({ createdAt: -1 });
 
     const total = await BloodDonor.countDocuments(query);
@@ -107,7 +107,7 @@ export const createDonor = async (
         donors,
         total,
         page: +page,
-        totalPages: Math.ceil(total / +limit),
+        // totalPages: Math.ceil(total / +limit),
       });
   };
   
