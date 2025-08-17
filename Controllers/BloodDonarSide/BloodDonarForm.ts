@@ -23,15 +23,16 @@ export const createDonor = async (req: Request, res: Response): Promise<Response
       throw new createError.BadRequest("Phone number must be exactly 10 digits");
     }
 
-    const existingUser = await User.findById(userId);
-    if (!existingUser) {
-      throw new createError.NotFound("User not found");
-    }
+const existingUser = await User.findById(userId);
+if (!existingUser) {
+  throw new createError.NotFound("User not found");
+}
 
-    const existingDonor = await BloodDonor.findById(userId);
-    if (existingDonor) {
-      throw new createError.BadRequest("Donor allready created");
-    }
+
+const existingDonor = await BloodDonor.findOne({ userId });
+if (existingDonor) {
+  throw new createError.BadRequest("Donor already created");
+}
 
     const donor = new BloodDonor({
       phone: cleanedPhone,
