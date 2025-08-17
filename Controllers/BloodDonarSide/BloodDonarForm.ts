@@ -64,52 +64,31 @@ export const createDonor = async (
 };
 
   
+  
   // 🔍 Get All Donors (with pagination & search)
-  export const getDonors = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    const {
-      page = 1,
-      // limit = 10,
-      search = "",
-      bloodGroup,
-      pincode,
-      place,
-    } = req.query;
-    // demo
-    // /api/donors?search=a&bloodGroup=O+&pincode=123456
+  export const getDonors = async (req: Request, res: Response): Promise<Response> => {
+  const { search = "", bloodGroup, pincode, place } = req.query;
 
-    const query: any = {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { bloodGroup: { $regex: search, $options: "i" } },
-        { "address.place": { $regex: search, $options: "i" } },
-      ],
-    };
-
-    if (bloodGroup) query.bloodGroup = bloodGroup;
-    if (pincode) query["address.pincode"] = pincode;
-    if (place) query["address.place"] = place;
-
-    const donors = await BloodDonor.find(query)
-      .populate("userId")
-      .skip((+page - 1) * +limit)
-      // .limit(+limit)
-      .sort({ createdAt: -1 });
-
-    const total = await BloodDonor.countDocuments(query);
-
-    return res
-      .status(200)
-      .json({
-        donors,
-        total,
-        page: +page,
-        // totalPages: Math.ceil(total / +limit),
-      });
+  const query: any = {
+    $or: [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { bloodGroup: { $regex: search, $options: "i" } },
+      { "address.place": { $regex: search, $options: "i" } },
+    ],
   };
+
+  if (bloodGroup) query.bloodGroup = bloodGroup;
+  if (pincode) query["address.pincode"] = pincode;
+  if (place) query["address.place"] = place;
+
+  const donors = await BloodDonor.find(query)
+    .populate("userId")
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json({ donors, total: donors.length });
+};
+
   
   // 📄 Get Single Donor
   export const getSingleDonor = async (req: Request, res: Response): Promise<Response> => {
