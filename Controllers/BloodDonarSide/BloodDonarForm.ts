@@ -1,23 +1,16 @@
 import { Request, Response } from "express";
 import BloodDonor from "../../Model/BloodDonarSchema";
 import createError from "http-errors";
+import User from "../../Model/UserSchema";
+
 
 
 // ✅ Create a Donor
-export const createDonor = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
+export const createDonor = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const {
-      phone,
-      dateOfBirth,
-      bloodGroup,
-      address,
-      lastDonationDate,
-      userId,
-    } = req.body.newDonor;
+    const {  phone,  dateOfBirth, bloodGroup, address, lastDonationDate,  userId } = req.body.newDonor;
 
+     
     // Check if donor already exists by email
     const exists = await BloodDonor.findOne({ phone });
     if (exists) {
@@ -27,18 +20,26 @@ export const createDonor = async (
     // Validate phone number - remove starting 0 if needed
     const cleanedPhone = phone.startsWith("0") ? phone.slice(1) : phone;
     if (!/^\d{10}$/.test(cleanedPhone)) {
-      throw new createError.BadRequest(
-        "Phone number must be exactly 10 digits"
-      );
+      throw new createError.BadRequest("Phone number must be exactly 10 digits");
+    }
+
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      throw new createError.NotFound("User not found");
+    }
+
+    const existingDonor = await BloodDonor.findById(userId);
+    if (existingDonor) {
+      throw new createError.BadRequest("Donor allready created");
     }
 
     const donor = new BloodDonor({
       phone: cleanedPhone,
-      dateOfBirth,
+       dateOfBirth,
       bloodGroup,
       address,
       lastDonationDate,
-      userId,
+       userId
     });
 
     await donor.save();
@@ -49,12 +50,19 @@ export const createDonor = async (
       status: 201,
     });
   } catch (error: any) {
+
     if (error.code === 11000) {
       // MongoDB duplicate key error
-      return res
-        .status(409)
-        .json({ message: "Email or phone already exists", status: 409 });
+      return res.status(409).json({ message: "Email or phone already exists", status: 409 });
     }
+
+    // Other errors
+    const statusCode = error.status || 500;
+    const message = error.message || "Internal Server Error";
+    return res.status(statusCode).json({ message, status: statusCode });
+  }
+};
+
 
     // Other errors
     const statusCode = error.status || 500;
