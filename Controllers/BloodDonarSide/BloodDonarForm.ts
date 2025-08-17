@@ -29,10 +29,10 @@ if (!existingUser) {
 }
 
 
-const existingDonor = await BloodDonor.findOne({ userId });
-if (existingDonor) {
-  throw new createError.BadRequest("Donor already created");
-}
+// const existingDonor = await BloodDonor.findOne({ userId });
+// if (existingDonor) {
+//   throw new createError.BadRequest("Donor already created");
+// }
 
     const donor = new BloodDonor({
       phone: cleanedPhone,
