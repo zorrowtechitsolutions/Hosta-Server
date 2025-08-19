@@ -87,7 +87,8 @@ app.use(passport.session());
 app.use("/auth", authRoutes); // route prefix for auth
 
 app.get("/", (req, res) => {
-  res.send(`<a href="/auth/google">Login with Google</a>`);
+  // res.send(`<a href="/auth/google">Login with Google</a>`);
+  res.redirect("/auth/google");
 });
 
 app.get("/profile", (req, res) => {
