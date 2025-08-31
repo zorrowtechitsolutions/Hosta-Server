@@ -54,7 +54,6 @@ const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
       place: { type: String, required: true },
       pincode: { type: Number, required: true },
     },
-    lastDonationDate: { type: Date, default: null },
   },
   { timestamps: true }
 );
