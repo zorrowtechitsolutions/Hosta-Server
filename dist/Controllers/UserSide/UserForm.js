@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReview = exports.editReview = exports.postReview = exports.getHospitals = exports.resetPassword = exports.userData = exports.verifyOtp = exports.login = exports.userLogin = exports.userRegister = void 0;
+exports.deleteReview = exports.editReview = exports.postReview = exports.getHospitals = exports.resetPassword = exports.aUserData = exports.userData = exports.verifyOtp = exports.login = exports.userLogin = exports.userRegister = void 0;
 const joi_1 = __importDefault(require("joi"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -253,6 +253,17 @@ const userData = async (req, res) => {
     });
 };
 exports.userData = userData;
+const aUserData = async (req, res) => {
+    const user = await UserSchema_1.default.findById(req.params.id);
+    if (!user) {
+        throw new http_errors_1.default.NotFound("User not found");
+    }
+    return res.status(200).json({
+        status: "success",
+        data: user,
+    });
+};
+exports.aUserData = aUserData;
 // Reset Password
 const resetPassword = async (req, res) => {
     const { email, password } = req.body;
