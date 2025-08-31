@@ -26,6 +26,7 @@ export const sendMail = async (
     subject: subject,
     text: text,
   };
+  
 
   // Send email and wait for the result
   const info = await transporter.sendMail(mailOptions);

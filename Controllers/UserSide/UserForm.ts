@@ -6,9 +6,16 @@ import Jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../../Model/UserSchema";
 import { ObjectId } from "mongodb";
 import Hospital from "../../Model/HospitalSchema";
-// import { use } from "passport";
-// import { error } from "console";
-import mongoose from "mongoose";
+const twilio = require("twilio");
+require("dotenv").config();
+
+const otpStorage: Map<string, number> = new Map();
+
+
+
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN );
+
+
 
 // Joi schema to validate the Registration data of users
 const joiSchema = Joi.object({
@@ -82,7 +89,7 @@ export const userLogin = async (
   res: Response
 ): Promise<Response> => {
   const { email, password } = req.body;
-
+  
   const user: User | null = await User.findOne({ email: email });
   if (user === null) {
     throw new HttpError.NotFound("You email is not found, Please Register");
@@ -122,7 +129,199 @@ export const userLogin = async (
   });
 };
 
+
+
+
+export const login = async (req: Request, res: Response): Promise<Response> => {
+  let { phone }: { phone: string } = req.body;
+
+  try {
+    // Check if customer exists
+    const user = await User.findOne({ phone });
+
+    if (!user) {
+      return res.status(400).json({ message: "Phone number not registered" });
+    }
+
+    // Ensure +91 prefix with space
+    if (!phone.startsWith("+91")) {
+      phone = "+91 " + phone.replace(/^\+91\s*/, "").trim();
+    }
+
+    // Generate OTP (6-digit random number)
+    const otp: number = Math.floor(100000 + Math.random() * 900000);
+    otpStorage.set(phone, otp); // Store OTP temporarily
+
+    // Send OTP via Twilio
+    await client.messages.create({
+      body: `Your verification code is: ${otp}`,
+      from: process.env.TWLIO_NUMBER as string,
+      to: phone,
+    });
+
+    return res.status(200).json({ message: "OTP sent successfully", status: 200 });
+  } catch (error) {
+    console.error("Twilio Error:", error);
+    return res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+
+
+
+interface VerifyOtpRequestBody {
+    phone: string;
+    otp: string | number;
+  
+}
+
+export const verifyOtp = 
+  async (req: Request<{}, {}, VerifyOtpRequestBody>, res: Response): Promise<Response> => {
+    try {
+      const { phone, otp } = req.body;
+
+      if (!phone || !otp) {
+        return res.status(400).json({ message: "Phone and OTP are required" });
+      }
+
+      // Ensure +91 prefix
+      const formattedPhone = phone.startsWith("+91")
+        ? phone
+        : "+91 " + phone.replace(/^\+91\s*/, "").trim();
+
+      // Validate OTP
+      const storedOtp = otpStorage.get(formattedPhone);
+      if (!storedOtp || storedOtp.toString() !== otp.toString()) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Remove OTP from storage
+      otpStorage.delete(formattedPhone);
+
+      // Find customer
+      const user = await User.findOne({ phone });
+      if (!user) {
+        return res.status(400).json({ message: "Customer not found" });
+      }
+
+      // Generate JWT
+      const token = Jwt.sign(
+        { email: user.email, id: user._id },
+        process.env.JWT_SECRET || "myjwtsecretkey",
+        { expiresIn: "1h" }
+      );
+
+      const userDetails = {
+        name: user.name,
+        email: user.email,
+        _id: user._id,
+        phone: user.phone,
+        picture: user?.picture,
+      };
+
+      return res.status(200).json({
+        message: "OTP verified successfully",
+        token,
+        userDetails,
+        status: 200,
+      });
+    } catch (err) {
+      console.error("Verify OTP error:", err);
+      return res.status(500).json({ error: "Server error, please try again" });
+    }
+  }
+;
+
+
+
+// export const userLogin = async (req: Request, res: Response): Promise<Response> => {
+//   const { email, password, name, picture } = req.body;
+//   const jwtSecret = process.env.JWT_SECRET;
+  
+
+//   if (!jwtSecret) {
+//     throw new Error("JWT_SECRET is not defined");
+//   }
+
+//   // Case 1: Google Login (no password but has name and picture)
+//   if (!password && name && picture) {
+//     let user = await User.findOne({ email });
+
+//     // If user doesn't exist, create a new Google user
+//     if (!user) {
+//       user = new User({
+//         email,
+//         name,
+//         picture,
+//       });
+//       await user.save();
+//     }
+
+//     // Generate JWT tokens
+//     const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//       expiresIn: "15m",
+//     });
+
+//     const refreshToken = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//       expiresIn: "7d",
+//     });
+
+//     const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+//     res.cookie("refreshToken", refreshToken, {
+//       httpOnly: true,
+//       expires: expirationDate,
+//       secure: true,
+//       sameSite: "none",
+//     });
+
+//     return res.status(200).json({
+//       status: "Success",
+//       token,
+//       data: user,
+//       message: user.isNew ? "Account created via Google" : "Google login successful",
+//     });
+//   }
+
+//   // Case 2: Manual Login
+
+//    const user: User | null = await User.findOne({ email: email });
+//   if (user === null) {
+//     throw new HttpError.NotFound("You email is not found, Please Register");
+//   }
+//   const passwordCheck = await bcrypt.compare(password, user.password);
+//   if (!passwordCheck) {
+//     throw new HttpError.BadRequest("Incorrect password, try again!");
+//   }
+
+//   const token = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//     expiresIn: "15m",
+//   });
+
+//   const refreshToken = Jwt.sign({ id: user._id, name: user.name }, jwtSecret, {
+//     expiresIn: "7d",
+//   });
+
+//   const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+//   res.cookie("refreshToken", refreshToken, {
+//     httpOnly: true,
+//     expires: expirationDate,
+//     secure: true,
+//     sameSite: "none",
+//   });
+
+//   return res.status(200).json({
+//     status: "Success",
+//     token,
+//     data: user,
+//     message: "You logged in successfully.",
+//   });
+// };
+
+
+
+
 // Get user data
+
 export const userData = async (
   req: Request,
   res: Response
@@ -143,49 +342,6 @@ export const userData = async (
   return res.status(200).json({
     status: "success",
     data: data,
-  });
-};
-
-//Update User Data
-export const updateUserData = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
-  const { phone, name } = req.body;
-  const { id } = req.params;
-  const user = await User.findById(id);
-  if (!user) {
-    throw new HttpError.NotFound("User not found!");
-  }
-  user.phone = phone as string;
-  user.name = name as string;
-  await user.save();
-
-  return res.status(200).json({
-    status: "Success",
-    Message: "Data Updated Successfully",
-  });
-};
-
-// Delete User Profile
-export const deleteUser = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
-  const { id } = req.params;
-  await User.findByIdAndDelete(id);
-  if (req.cookies.refreshToken) {
-    const expirationDate = new Date(0);
-    res.cookie("refreshToken", "", {
-      httpOnly: true,
-      expires: expirationDate,
-      secure: true,
-      sameSite: "none",
-    });
-  }
-  return res.status(200).json({
-    status: "Success",
-    message: "User profile deleted successfully",
   });
 };
 
@@ -210,6 +366,8 @@ export const getHospitals = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
+  console.log("Sample from native");
+  
   const hospitals = await Hospital.find().populate({
     path: "reviews.user_id",
     select: "name email",
@@ -225,27 +383,12 @@ export const postReview = async (
   const { user_id, rating, comment, date } = req.body;
   const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(user_id)) {
-    throw new HttpError.BadRequest("Invalid user ID format.");
-  }
-
   const hospital = await Hospital.findById(id);
   if (!hospital) {
     throw new HttpError.NotFound("Hospital not found");
   }
 
-  // Ensure user exists (optional but good practice)
-  const user = await User.findById(user_id);
-  if (!user) {
-    throw new HttpError.NotFound("User not found");
-  }
-
-  hospital.reviews.push({
-    user_id: new mongoose.Types.ObjectId(user_id),
-    rating,
-    comment,
-    date,
-  });
+  hospital.reviews.push({ user_id, rating, comment, date });
 
   await hospital.save();
   const updatedHospital = await hospital.populate({
@@ -265,19 +408,16 @@ export const editReview = async (
 ): Promise<Response> => {
   const { hospital_id, reviewId } = req.params;
   const { rating, comment } = req.body;
-
   const hospital = await Hospital.findById(hospital_id);
   if (!hospital) {
     throw new HttpError.NotFound("Hospital not found");
   }
-
   const index = hospital.reviews.findIndex(
     (element) => element._id.toString() === reviewId
   );
   if (index === -1) {
     throw new HttpError.NotFound("Review not found");
   }
-
   hospital.reviews[index].rating = rating;
   hospital.reviews[index].comment = comment;
   hospital.reviews[index].date = new Date().toISOString();
@@ -288,7 +428,6 @@ export const editReview = async (
     path: "reviews.user_id",
     select: "name email",
   });
-
   return res.status(200).json({
     message: "Review updated successfully",
     data: updatedHospital,
@@ -304,7 +443,6 @@ export const deleteReview = async (
   if (!hospital) {
     throw new HttpError.NotFound("Hospital not found");
   }
-
   const index = hospital.reviews.findIndex(
     (element) => element._id.toString() === reviewId
   );
@@ -313,13 +451,13 @@ export const deleteReview = async (
   }
 
   hospital.reviews.splice(index, 1);
+
   await hospital.save();
 
   const updatedHospital = await hospital.populate({
     path: "reviews.user_id",
     select: "name email",
   });
-
   return res.status(200).json({
     message: "Review deleted successfully",
     data: updatedHospital,

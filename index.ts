@@ -3,8 +3,8 @@ dotenv.config({ path: "./Config/.env" });
 import cron from "node-cron";
 import session from "express-session";
 import passport from "passport";
+import "./Config/passport"; 
 import authRoutes from "./Routes/AuthRoutes";
-import "./Config/passport";
 import express from "express";
 import cors from "cors";
 import connectToDb from "./Config/dbConnection";
@@ -17,10 +17,10 @@ import AmbulanceRoutes from "./Routes/AmbulanceRoutes";
 import BloodDonarRoutes from "./Routes/BloodDonarRoutes";
 import MedicineRemainderRoutes from "./Routes/MedicineRemainderRoutes";
 import LabRoutes from "./Routes/LabRoutes";
-// import {
-//   checkMissedDoses,
-//   checkAndRefillMedicines,
-// } from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
+import {
+  checkMissedDoses,
+  checkAndRefillMedicines,
+} from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
 
 const app = express();
 
@@ -30,13 +30,11 @@ app.use(
       process.env.UserSide_URL as string,
       process.env.AmbulanceSide_URL as string,
       process.env.HospitalSide_URL as string,
-      process.env.Playstoretest as string,
-      "https://playstore-support.vercel.app",
+      "http://127.0.0.1:5500"
     ],
     credentials: true,
   })
 );
-
 
 // app.use(
 //   cors({
@@ -65,10 +63,10 @@ app.use(
 // );
 
 // Schedule the job to run every 1 minute
-// cron.schedule("* * * * *", async () => {
-//   await checkMissedDoses();
-//   await checkAndRefillMedicines();
-// });
+cron.schedule("* * * * *", async () => {
+  await checkMissedDoses();
+  await checkAndRefillMedicines();
+});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -95,6 +93,8 @@ app.get("/profile", (req, res) => {
   res.send(`<pre>${JSON.stringify(req.user, null, 2)}</pre>`);
 });
 
+
+
 // Fix route paths with leading '/'
 app.use("/api", userRoutes);
 app.use("/api", commenRoutes);
@@ -110,7 +110,11 @@ app.use(errorHandler);
 
 app.listen(process.env.Port, () => {
   console.log(`App is running  http://localhost:${process.env.Port}`);
-  
 });
 
 export default app;
+
+
+
+
+

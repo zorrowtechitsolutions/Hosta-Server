@@ -3,50 +3,50 @@ import MedicineRemainder from "../../Model/MedicineRemainderSchema";
 import createError from "http-errors";
 import moment from 'moment';
 
-// export const checkMissedDoses = async () => {
-//   const now = moment();
+export const checkMissedDoses = async () => {
+  const now = moment();
 
-//   const medicines = await MedicineRemainder.find({ reminder: true });
+  const medicines = await MedicineRemainder.find({ reminder: true });
 
-//   for (const medicine of medicines) {
-//     const start = moment(medicine.startDate);
-//     const end = medicine.days === "ongoing"
-//       ? moment().add(100, "years")
-//       : moment(start).add(medicine.days, "days");
+  for (const medicine of medicines) {
+    const start = moment(medicine.startDate);
+    const end = medicine.days === "ongoing"
+      ? moment().add(100, "years")
+      : moment(start).add(medicine.days, "days");
 
-//     if (now.isBefore(start) || now.isAfter(end)) continue;
+    if (now.isBefore(start) || now.isAfter(end)) continue;
 
-//     let updated = false;
+    let updated = false;
 
-//     for (const dateEntry of medicine.dates) {
-//       if (moment(dateEntry.date).format("YYYY-MM-DD") !== now.format("YYYY-MM-DD")) continue;
+    for (const dateEntry of medicine.dates) {
+      if (moment(dateEntry.date).format("YYYY-MM-DD") !== now.format("YYYY-MM-DD")) continue;
 
-//       for (const timeEntry of dateEntry.times) {
-//         const scheduledTime = moment(timeEntry.time, "h:mm a").set({
-//           year: now.year(),
-//           month: now.month(),
-//           date: now.date(),
-//         });
+      for (const timeEntry of dateEntry.times) {
+        const scheduledTime = moment(timeEntry.time, "h:mm a").set({
+          year: now.year(),
+          month: now.month(),
+          date: now.date(),
+        });
 
-//         const diffInMinutes = now.diff(scheduledTime, "minutes");
+        const diffInMinutes = now.diff(scheduledTime, "minutes");
 
-//         if (diffInMinutes >= 4 && timeEntry.status === "take") {
-//           timeEntry.status = "missed";
-//           updated = true;
-//         }
-//       }
-//     }
+        if (diffInMinutes >= 4 && timeEntry.status === "take") {
+          timeEntry.status = "missed";
+          updated = true;
+        }
+      }
+    }
 
-//     if (updated) {
-//       // 🔥 This tells Mongoose to detect changes in the nested `dates` array
-//       medicine.markModified('dates');
-//       await medicine.save();
-//       console.log(`⏰ Missed doses updated for medicine: ${medicine.name}`);
-//     }
-//   }
+    if (updated) {
+      // 🔥 This tells Mongoose to detect changes in the nested `dates` array
+      medicine.markModified('dates');
+      await medicine.save();
+      console.log(`⏰ Missed doses updated for medicine: ${medicine.name}`);
+    }
+  }
 
-//   console.log("✅ Missed medicine check complete");
-// };
+  console.log("✅ Missed medicine check complete");
+};
 
 
 // refilltracking
