@@ -345,6 +345,24 @@ export const userData = async (
   });
 };
 
+
+export const aUserData = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    throw new HttpError.NotFound("User not found");
+  }
+
+  return res.status(200).json({
+    status: "success",
+    data: user,
+  });
+};
+
 // Reset Password
 export const resetPassword = async (
   req: Request,
