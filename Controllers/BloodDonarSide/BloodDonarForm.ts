@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import BloodDonor from "../../Model/BloodDonarSchema";
 import createError from "http-errors";
-
+import User from "../../Model/UserSchema";
 
 // ✅ Create a Donor
 export const createDonor = async (
@@ -14,7 +14,6 @@ export const createDonor = async (
       dateOfBirth,
       bloodGroup,
       address,
-      lastDonationDate,
       userId,
     } = req.body.newDonor;
 
@@ -32,12 +31,22 @@ export const createDonor = async (
       );
     }
 
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      throw new createError.NotFound("User not found");
+    }
+
+ 
+    const existingDonor = await BloodDonor.findOne({ userId });
+    if (existingDonor) {
+      throw new createError.BadRequest("Donor already created");
+    }
+
     const donor = new BloodDonor({
       phone: cleanedPhone,
       dateOfBirth,
       bloodGroup,
       address,
-      lastDonationDate,
       userId,
     });
 
@@ -63,104 +72,92 @@ export const createDonor = async (
   }
 };
 
-  
-  // 🔍 Get All Donors (with pagination & search)
-  export const getDonors = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    const {
-      page = 1,
-      limit = 10,
-      search = "",
-      bloodGroup,
-      pincode,
-      place,
-    } = req.query;
-    // demo
-    // /api/donors?search=a&bloodGroup=O+&pincode=123456
+// 🔍 Get All Donors (with pagination & search)
+export const getDonors = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { search = "", bloodGroup, pincode, place } = req.query;
 
-    const query: any = {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { bloodGroup: { $regex: search, $options: "i" } },
-        { "address.place": { $regex: search, $options: "i" } },
-      ],
-    };
-
-    if (bloodGroup) query.bloodGroup = bloodGroup;
-    if (pincode) query["address.pincode"] = pincode;
-    if (place) query["address.place"] = place;
-
-    const donors = await BloodDonor.find(query)
-      .populate("userId")
-      .skip((+page - 1) * +limit)
-      .limit(+limit)
-      .sort({ createdAt: -1 });
-
-    const total = await BloodDonor.countDocuments(query);
-
-    return res
-      .status(200)
-      .json({
-        donors,
-        total,
-        page: +page,
-        totalPages: Math.ceil(total / +limit),
-      });
+  const query: any = {
+    $or: [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { bloodGroup: { $regex: search, $options: "i" } },
+      { "address.place": { $regex: search, $options: "i" } },
+    ],
   };
-  
-  // 📄 Get Single Donor
-  export const getSingleDonor = async (req: Request, res: Response): Promise<Response> => {
-    const { id } = req.params;
-  
-    if (!id) throw new createError.BadRequest("Invalid donor ID");
-  
-    const donor = await BloodDonor.findById(id);
-    if (!donor) throw new createError.NotFound("Donor not found");
-  
-    return res.status(200).json(donor);
-  }; 
 
-    // 📄 Get  Donor id
-    export const getDonorId = async (
-      req: Request,
-      res: Response
-    ): Promise<Response> => {
-      const { id } = req.params;
+  if (bloodGroup) query.bloodGroup = bloodGroup;
+  if (pincode) query["address.pincode"] = pincode;
+  if (place) query["address.place"] = place;
 
-      if (!id) throw new createError.BadRequest("Invalid donor ID");
+  const donors = await BloodDonor.find(query)
+    .populate("userId")
+    .sort({ createdAt: -1 });
 
-      const donor = await BloodDonor.findById({ userId: id });
-      if (!donor) throw new createError.NotFound("Donor not found");
+  return res.status(200).json({ donors, total: donors.length });
+};
 
-      return res.status(200).json(donor);
-    };
-  
-  
-  // 📝 Update Donor
-  export const updateDonor = async (req: Request, res: Response): Promise<Response> => {
-    const { id } = req.params;
-    const updateData = req.body;
-  
-    if (!id) throw new createError.BadRequest("Invalid donor ID");
-  
-    const donor = await BloodDonor.findByIdAndUpdate(id, updateData, { new: true });
-    if (!donor) throw new createError.NotFound("Donor not found");
-  
-    return res.status(200).json({ message: "Donor updated", donor });
-  };
-  
-  // ❌ Delete Donor
-  export const deleteDonor = async (req: Request, res: Response): Promise<Response> => {
-    const { id } = req.params;
-  
-    if (!id) throw new createError.BadRequest("Invalid donor ID");
-  
-    const donor = await BloodDonor.findByIdAndDelete(id);
-    if (!donor) throw new createError.NotFound("Donor not found");
-  
-    return res.status(200).json({ message: "Donor deleted successfully" });
-  };
-  
+// 📄 Get Single Donor
+export const getSingleDonor = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
+
+  if (!id) throw new createError.BadRequest("Invalid donor ID");
+
+  const donor = await BloodDonor.findById(id).populate("userId");
+  if (!donor) throw new createError.NotFound("Donor not found");
+
+  return res.status(200).json(donor);
+};
+
+// 📄 Get  Donor id
+export const getDonorId = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
+
+  if (!id) throw new createError.BadRequest("Invalid donor ID");
+
+  const donor = await BloodDonor.findById({ userId: id });
+  if (!donor) throw new createError.NotFound("Donor not found");
+
+  return res.status(200).json(donor);
+};
+
+// 📝 Update Donor
+export const updateDonor = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  if (!id) throw new createError.BadRequest("Invalid donor ID");
+
+  const donor = await BloodDonor.findByIdAndUpdate(id, updateData, {
+    new: true,
+  });
+  if (!donor) throw new createError.NotFound("Donor not found");
+
+  return res.status(200).json({ message: "Donor updated", donor });
+};
+
+// ❌ Delete Donor
+export const deleteDonor = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
+
+  if (!id) throw new createError.BadRequest("Invalid donor ID");
+
+  const donor = await BloodDonor.findByIdAndDelete(id);
+  if (!donor) throw new createError.NotFound("Donor not found");
+
+  return res.status(200).json({ message: "Donor deleted successfully" });
+};

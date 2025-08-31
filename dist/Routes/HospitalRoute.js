@@ -1,0 +1,26 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const TryCatch_1 = require("../Utils/TryCatch");
+const HospitalForm_1 = require("../Controllers/HospitalSide/HospitalForm");
+const Multer_1 = require("../Middlewares/Multer");
+const Authenticator_1 = __importDefault(require("../Middlewares/Authenticator"));
+const hospitalRoutes = express_1.default.Router();
+hospitalRoutes.post("/hospital/registration", (0, TryCatch_1.trycatch)(HospitalForm_1.HospitalRegistration));
+hospitalRoutes.post("/hospital/login", (0, TryCatch_1.trycatch)(HospitalForm_1.HospitalLogin));
+hospitalRoutes.post("/hospital/password", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.resetPassword));
+hospitalRoutes.get("/hospital/details", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.getHospitalDetails));
+hospitalRoutes.put("/hospital/details/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.updateHospitalDetails));
+hospitalRoutes.post("/hospital/specialty/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.addSpecialty));
+hospitalRoutes.put("/hospital/specialty/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.updateSpecialty));
+hospitalRoutes.delete("/hospital/specialty/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.deleteSpecialty));
+hospitalRoutes.post("/hospital/profileImage/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(Multer_1.uploadImage));
+hospitalRoutes.post("/hospital/doctor/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.addDoctor));
+hospitalRoutes.put("/hospital/doctor/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.updateDoctor));
+hospitalRoutes.delete("/hospital/doctor/:hospital_id/:doctor_id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.deleteDoctor));
+hospitalRoutes.delete("/hospital/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.hospitalDelete));
+exports.default = hospitalRoutes;
+//# sourceMappingURL=HospitalRoute.js.map
