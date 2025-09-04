@@ -65,6 +65,7 @@ app.use((0, cors_1.default)({
 //   await checkMissedDoses();
 //   await checkAndRefillMedicines();
 // });
+app.use(express_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use((0, express_session_1.default)({

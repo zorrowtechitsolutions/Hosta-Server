@@ -130,7 +130,8 @@ export const userLogin = async (
 };
 
 export const login = async (req: Request, res: Response): Promise<Response> => {
-  let { phone }: { phone: string } = req.body;
+  let phone=req.body.phone;
+    
   try {
     // Check if customer exists
     
@@ -156,7 +157,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
       to: phone,
     })
 
-    return res.status(200).json({ message: "OTP sent successfully", status: 200 });
+    return res.status(200).json({ message: `OTP sent successfully ${otp}`, status: 200 });
   } catch (error) {
     console.error("Twilio Error:", error);
     return res.status(500).json({ message: "Failed to send OTP" ,error: error, status: 500});
