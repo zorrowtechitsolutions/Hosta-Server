@@ -98,9 +98,9 @@ const login = async (req, res) => {
     let { phone } = req.body;
     try {
         // Check if customer exists
-        const user = await UserSchema_1.default.findOne({ phone });
+        const user = await UserSchema_1.default.findOne({ phone: String(phone).trim() });
         if (!user) {
-            return res.status(400).json({ message: "Phone number not registered" });
+            return res.status(400).json({ message: "Phone number not registered!" });
         }
         // Ensure +91 prefix with space
         if (!phone.startsWith("+91")) {
@@ -119,7 +119,7 @@ const login = async (req, res) => {
     }
     catch (error) {
         console.error("Twilio Error:", error);
-        return res.status(500).json({ message: "Failed to send OTP" });
+        return res.status(500).json({ message: "Failed to send OTP", error: error, status: 500 });
     }
 };
 exports.login = login;
