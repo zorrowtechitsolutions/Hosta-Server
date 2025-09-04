@@ -95,7 +95,8 @@ const userLogin = async (req, res) => {
 };
 exports.userLogin = userLogin;
 const login = async (req, res) => {
-    let { phone } = req.body;
+    let phone = "6282811230";
+    console.log(phone);
     try {
         // Check if customer exists
         const user = await UserSchema_1.default.findOne({ phone: String(phone).trim() });
@@ -115,7 +116,7 @@ const login = async (req, res) => {
             from: process.env.TWLIO_NUMBER,
             to: phone,
         });
-        return res.status(200).json({ message: "OTP sent successfully", status: 200 });
+        return res.status(200).json({ message: `OTP sent successfully ${otp}`, status: 200 });
     }
     catch (error) {
         console.error("Twilio Error:", error);
@@ -126,6 +127,7 @@ exports.login = login;
 const verifyOtp = async (req, res) => {
     try {
         const { phone, otp } = req.body;
+        console.log(req.body);
         if (!phone || !otp) {
             return res.status(400).json({ message: "Phone and OTP are required" });
         }
