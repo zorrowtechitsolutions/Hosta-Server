@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ path: "./Config/.env" });
-const node_cron_1 = __importDefault(require("node-cron"));
+// import cron from "node-cron";
 const express_session_1 = __importDefault(require("express-session"));
 const passport_1 = __importDefault(require("passport"));
 require("./Config/passport");
@@ -22,7 +22,10 @@ const AmbulanceRoutes_1 = __importDefault(require("./Routes/AmbulanceRoutes"));
 const BloodDonarRoutes_1 = __importDefault(require("./Routes/BloodDonarRoutes"));
 const MedicineRemainderRoutes_1 = __importDefault(require("./Routes/MedicineRemainderRoutes"));
 const LabRoutes_1 = __importDefault(require("./Routes/LabRoutes"));
-const MedicineRemainderForm_1 = require("./Controllers/MedicineRemainderSide/MedicineRemainderForm");
+// import {
+//   // checkMissedDoses,
+//   checkAndRefillMedicines,
+// } from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
     origin: [
@@ -58,10 +61,10 @@ app.use((0, cors_1.default)({
 //   })
 // );
 // Schedule the job to run every 1 minute
-node_cron_1.default.schedule("* * * * *", async () => {
-    await (0, MedicineRemainderForm_1.checkMissedDoses)();
-    await (0, MedicineRemainderForm_1.checkAndRefillMedicines)();
-});
+// cron.schedule("* * * * *", async () => {
+//   await checkMissedDoses();
+//   await checkAndRefillMedicines();
+// });
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use((0, express_session_1.default)({

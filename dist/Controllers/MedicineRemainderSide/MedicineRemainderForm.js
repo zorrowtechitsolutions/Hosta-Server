@@ -3,47 +3,44 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editMedicineStatus = exports.deleteMedicine = exports.updateMedicine = exports.getSingleMedicine = exports.getMedicines = exports.createMedicine = exports.checkAndRefillMedicines = exports.checkMissedDoses = void 0;
+exports.editMedicineStatus = exports.deleteMedicine = exports.updateMedicine = exports.getSingleMedicine = exports.getMedicines = exports.createMedicine = exports.checkAndRefillMedicines = void 0;
 const MedicineRemainderSchema_1 = __importDefault(require("../../Model/MedicineRemainderSchema"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const moment_1 = __importDefault(require("moment"));
-const checkMissedDoses = async () => {
-    const now = (0, moment_1.default)();
-    const medicines = await MedicineRemainderSchema_1.default.find({ reminder: true });
-    for (const medicine of medicines) {
-        const start = (0, moment_1.default)(medicine.startDate);
-        const end = medicine.days === "ongoing"
-            ? (0, moment_1.default)().add(100, "years")
-            : (0, moment_1.default)(start).add(medicine.days, "days");
-        if (now.isBefore(start) || now.isAfter(end))
-            continue;
-        let updated = false;
-        for (const dateEntry of medicine.dates) {
-            if ((0, moment_1.default)(dateEntry.date).format("YYYY-MM-DD") !== now.format("YYYY-MM-DD"))
-                continue;
-            for (const timeEntry of dateEntry.times) {
-                const scheduledTime = (0, moment_1.default)(timeEntry.time, "h:mm a").set({
-                    year: now.year(),
-                    month: now.month(),
-                    date: now.date(),
-                });
-                const diffInMinutes = now.diff(scheduledTime, "minutes");
-                if (diffInMinutes >= 4 && timeEntry.status === "take") {
-                    timeEntry.status = "missed";
-                    updated = true;
-                }
-            }
-        }
-        if (updated) {
-            // 🔥 This tells Mongoose to detect changes in the nested `dates` array
-            medicine.markModified('dates');
-            await medicine.save();
-            console.log(`⏰ Missed doses updated for medicine: ${medicine.name}`);
-        }
-    }
-    console.log("✅ Missed medicine check complete");
-};
-exports.checkMissedDoses = checkMissedDoses;
+// export const checkMissedDoses = async () => {
+//   const now = moment();
+//   const medicines = await MedicineRemainder.find({ reminder: true });
+//   for (const medicine of medicines) {
+//     const start = moment(medicine.startDate);
+//     const end = medicine.days === "ongoing"
+//       ? moment().add(100, "years")
+//       : moment(start).add(medicine.days, "days");
+//     if (now.isBefore(start) || now.isAfter(end)) continue;
+//     let updated = false;
+//     for (const dateEntry of medicine.dates) {
+//       if (moment(dateEntry.date).format("YYYY-MM-DD") !== now.format("YYYY-MM-DD")) continue;
+//       for (const timeEntry of dateEntry.times) {
+//         const scheduledTime = moment(timeEntry.time, "h:mm a").set({
+//           year: now.year(),
+//           month: now.month(),
+//           date: now.date(),
+//         });
+//         const diffInMinutes = now.diff(scheduledTime, "minutes");
+//         if (diffInMinutes >= 4 && timeEntry.status === "take") {
+//           timeEntry.status = "missed";
+//           updated = true;
+//         }
+//       }
+//     }
+//     if (updated) {
+//       // 🔥 This tells Mongoose to detect changes in the nested `dates` array
+//       medicine.markModified('dates');
+//       await medicine.save();
+//       console.log(`⏰ Missed doses updated for medicine: ${medicine.name}`);
+//     }
+//   }
+//   console.log("✅ Missed medicine check complete");
+// };
 // refilltracking
 const checkAndRefillMedicines = async () => {
     const medicines = await MedicineRemainderSchema_1.default.find({ refillTracking: true });
