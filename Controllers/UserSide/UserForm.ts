@@ -129,18 +129,15 @@ export const userLogin = async (
   });
 };
 
-
-
-
 export const login = async (req: Request, res: Response): Promise<Response> => {
   let { phone }: { phone: string } = req.body;
-
   try {
     // Check if customer exists
-    const user = await User.findOne({ phone });
+    
+    const user = await User.findOne({ phone:String(phone).trim() });
 
     if (!user) {
-      return res.status(400).json({ message: "Phone number not registered" });
+      return res.status(400).json({ message: "Phone number not registered!" });
     }
 
     // Ensure +91 prefix with space
@@ -157,12 +154,12 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
       body: `Your verification code is: ${otp}`,
       from: process.env.TWLIO_NUMBER as string,
       to: phone,
-    });
+    })
 
     return res.status(200).json({ message: "OTP sent successfully", status: 200 });
   } catch (error) {
     console.error("Twilio Error:", error);
-    return res.status(500).json({ message: "Failed to send OTP" });
+    return res.status(500).json({ message: "Failed to send OTP" ,error: error, status: 500});
   }
 };
 
