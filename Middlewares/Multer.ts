@@ -67,28 +67,31 @@ export const uploadImage = async (
 };
 
 
-
 export const uploadProfile = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
   const { id } = req.params;
-      const { name } = req.body;
-
+  const { name } = req.body;
 
   const file = await uploadFile(req, res);
 
   const user = await userModel.findById(id);
   if (!user) {
-    throw new createError.NotFound("Hospital not found!");
+    throw new createError.NotFound("User not found!");
   }
 
-  // If there's an existing image, delete it from Cloudinary
-  if (user.picture?.public_id) {
-    await cloudinary.uploader.destroy(user.picture.public_id);
+  // Update name even if no file
+  if (name) {
+    user.name = name;
   }
 
   if (file) {
+    // delete old image if exists
+    if (user.picture?.public_id) {
+      await cloudinary.uploader.destroy(user.picture.public_id);
+    }
+
     const normalizedPath = path.normalize(file.path);
     const result = await cloudinary.uploader.upload(normalizedPath);
 
@@ -96,14 +99,13 @@ export const uploadProfile = async (
       imageUrl: result.secure_url,
       public_id: result.public_id,
     };
-
-     if (name) user.name = name;
-
-
-    await user.save();
-
-    return res.status(200).json({ imageUrl: result.secure_url });
-  } else {
-    throw new createError.BadRequest("No file uploaded!");
   }
+
+  await user.save();
+
+  return res.status(200).json({
+    message: "Profile updated successfully",
+    user, // return whole updated user, not just image
+  });
 };
+
