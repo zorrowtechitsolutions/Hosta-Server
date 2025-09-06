@@ -317,6 +317,38 @@ export const verifyOtp = async (
 //   });
 // };
 
+export const userUpdate = async (
+  req: Request<{ id: string }, {}, { name?: string }>, // params + body typing
+  res: Response
+): Promise<Response> => {
+  try {
+    const { name } = req.body;
+    const image : any = req.cloudinaryImageUrl; // from our multer-cloudinary middleware
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update only provided fields
+    if (name) user.name = name;
+    if (image) user.picture = image;
+
+    const updatedUser = await user.save();
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+    return res.status(500).json({ message: "Server error, please try again" });
+  }
+};
+
+
 // Get user data
 
 export const userData = async (
