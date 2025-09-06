@@ -16,6 +16,7 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+
 // Joi schema to validate the Registration data of users
 const joiSchema = Joi.object({
   name: Joi.string().trim().required().messages({
