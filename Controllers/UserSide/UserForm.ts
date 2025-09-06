@@ -318,12 +318,11 @@ export const verifyOtp = async (
 // };
 
 export const userUpdate = async (
-  req: Request<{ id: string }, {}, { name?: string }>, // params + body typing
+  req: Request, // params + body typing
   res: Response
 ): Promise<Response> => {
   try {
     const { name } = req.body;
-    const image : any = req.cloudinaryImageUrl; // from our multer-cloudinary middleware
 
     const user = await User.findById(req.params.id);
 
@@ -333,7 +332,6 @@ export const userUpdate = async (
 
     // Update only provided fields
     if (name) user.name = name;
-    if (image) user.picture = image;
 
     const updatedUser = await user.save();
 
@@ -347,6 +345,8 @@ export const userUpdate = async (
     return res.status(500).json({ message: "Server error, please try again" });
   }
 };
+
+
 
 
 // Get user data
