@@ -1,10 +1,11 @@
-import multer, { FileFilterCallback } from "multer";
-import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
-import { NextFunction, Request, Response } from "express";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { Request, Response } from "express";
 import Hospital from "../Model/HospitalSchema";
 import createError from "http-errors";
 import path from "path";
-import sharp from "sharp";
+import userModel from "../Model/UserSchema";
+
 
 const storage = multer.diskStorage({});
 const upload = multer({
@@ -67,65 +68,36 @@ export const uploadImage = async (
 
 
 
-declare global {
-  namespace Express {
-    interface Request {
-      cloudinaryImageUrl?: string | string[];
-    }
-  }
-}
-
-
-// Use memory storage (keeps image in memory, not on disk)
-
-const uploads = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per image
-  fileFilter: (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed"));
-    }
-  },
-});
-
-// Upload a single image (compressed, direct to Cloudinary)
-export const uploadImageSingle = (
+export const uploadProfile = async (
   req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  uploads.single("image")(req, res, async (err: any) => {
-    if (err) return next(err);
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
 
-    try {
-      if (!req.file) return next(new Error("No file provided"));
+  const file = await uploadFile(req, res);
 
-      const compressedBuffer = await sharp(req.file.buffer)
-        .jpeg({
-          quality: 80,
-          chromaSubsampling: "4:4:4",
-          mozjpeg: true,
-        })
-        .toBuffer();
+  const user = await userModel.findById(id);
+  if (!user) {
+    throw new createError.NotFound("Hospital not found!");
+  }
 
-      const result: UploadApiResponse = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "users" }, // optional: change folder
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result as UploadApiResponse);
-          }
-        );
-        stream.end(compressedBuffer);
-      });
+  // If there's an existing image, delete it from Cloudinary
+  if (user.picture?.public_id) {
+    await cloudinary.uploader.destroy(user.picture.public_id);
+  }
 
-      req.cloudinaryImageUrl = result.secure_url;
-      next();
-    } catch (error) {
-      next(error);
-    }
-  });
+  if (file) {
+    const normalizedPath = path.normalize(file.path);
+    const result = await cloudinary.uploader.upload(normalizedPath);
+
+    user.picture = {
+      imageUrl: result.secure_url,
+      public_id: result.public_id,
+    };
+    await user.save();
+
+    return res.status(200).json({ imageUrl: result.secure_url });
+  } else {
+    throw new createError.BadRequest("No file uploaded!");
+  }
 };
-
