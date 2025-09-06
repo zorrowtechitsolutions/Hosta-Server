@@ -14,7 +14,7 @@ import {
 } from "../Controllers/UserSide/UserForm";
 import { trycatch } from "../Utils/TryCatch";
 import Auth from "../Middlewares/Authenticator";
-import { uploadImageSingle } from "../lib/multer";
+import { uploadImageSingle } from "../Middlewares/Multer";
 
 
 const userRoutes = express.Router();
