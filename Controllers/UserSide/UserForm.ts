@@ -317,34 +317,6 @@ export const verifyOtp = async (
 //   });
 // };
 
-export const userUpdate = async (
-  req: Request, // params + body typing
-  res: Response
-): Promise<Response> => {
-  try {
-    const { name } = req.body;
-
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Update only provided fields
-    if (name) user.name = name;
-
-    const updatedUser = await user.save();
-
-    return res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser,
-      status: 200,
-    });
-  } catch (error) {
-    console.error("Update user error:", error);
-    return res.status(500).json({ message: "Server error, please try again" });
-  }
-};
 
 
 
