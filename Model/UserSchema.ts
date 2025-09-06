@@ -20,20 +20,14 @@ const userSchema = new Schema(
       type: String,
       minlength: 8,
     },
-    // phone: {
-    //   type: String,
-    //   unique: true,
-    //   match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
-    // },
     phone: {
       type: String,
       unique: true,
       sparse: true, // <-- Add this line
       match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
     },
-    picture: {
-      type: String,
-    },
+    picture: { imageUrl: { type: String }, public_id: { type: String } },
+
   },
   { timestamps: true }
 );
