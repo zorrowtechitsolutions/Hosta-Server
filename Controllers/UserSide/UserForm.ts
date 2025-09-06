@@ -173,66 +173,124 @@ interface VerifyOtpRequestBody {
   otp: string | number;
 }
 
-export const verifyOtp = async (
-  req: Request<{}, {}, VerifyOtpRequestBody>,
-  res: Response
-): Promise<Response> => {
-  try {
-    const { phone, otp } = req.body;
+// export const verifyOtp = async (
+//   req: Request<{}, {}, VerifyOtpRequestBody>,
+//   res: Response
+// ): Promise<Response> => {
+//   try {
+//     const { phone, otp } = req.body;
 
-    if (!phone || !otp) {
-      return res.status(400).json({ message: "Phone and OTP are required" });
+//     if (!phone || !otp) {
+//       return res.status(400).json({ message: "Phone and OTP are required" });
+//     }
+
+//     // Ensure +91 prefix
+//     const formattedPhone = phone.startsWith("+91")
+//       ? phone
+//       : "+91 " + phone.replace(/^\+91\s*/, "").trim();
+
+//     // Validate OTP
+//     const storedOtp = otpStorage.get(formattedPhone);
+
+//     if (!storedOtp || storedOtp.toString().trim() !== otp.toString().trim()) {
+//       return res
+//         .status(400)
+//         .json({ message: `Invalid or expired OTP ${otp},${storedOtp}` });
+//     }
+
+//     // Remove OTP from storage
+//     otpStorage.delete(formattedPhone);
+
+//     // Find customer
+//     const user = await User.findOne({ phone });
+//     if (!user) {
+//       return res.status(400).json({ message: "Customer not found" });
+//     }
+
+//     // Generate JWT
+//     const token = Jwt.sign(
+//       { email: user.email, id: user._id },
+//       process.env.JWT_SECRET || "myjwtsecretkey",
+//       { expiresIn: "1h" }
+//     );
+
+//     const userDetails = {
+//       name: user.name,
+//       email: user.email,
+//       _id: user._id,
+//       phone: user.phone,
+//       picture: user?.picture,
+//     };
+
+//     return res.status(200).json({
+//       message: "OTP verified successfully",
+//       token,
+//       userDetails,
+//       status: 200,
+//     });
+//   } catch (err) {
+//     console.error("Verify OTP error:", err);
+//     return res.status(500).json({ error: "Server error, please try again" });
+//   }
+// };
+
+export const verifyOtp = 
+  async (req: Request<{}, {}, VerifyOtpRequestBody>, res: Response): Promise<Response> => {
+    try {
+      const { phone, otp } = req.body;
+
+      if (!phone || !otp) {
+        return res.status(400).json({ message: "Phone and OTP are required" });
+      }
+
+      // Ensure +91 prefix
+      const formattedPhone = phone.startsWith("+91")
+        ? phone
+        : "+91 " + phone.replace(/^\+91\s*/, "").trim();
+
+      // Validate OTP
+      const storedOtp = otpStorage.get(formattedPhone);
+      if (!storedOtp || storedOtp.toString() !== otp.toString()) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Remove OTP from storage
+      otpStorage.delete(formattedPhone);
+
+      // Find customer
+      const user = await User.findOne({ phone });
+      if (!user) {
+        return res.status(400).json({ message: "Customer not found" });
+      }
+
+      // Generate JWT
+      const token = Jwt.sign(
+        { email: user.email, id: user._id },
+        process.env.JWT_SECRET || "myjwtsecretkey",
+        { expiresIn: "1h" }
+      );
+
+      const userDetails = {
+        name: user.name,
+        email: user.email,
+        _id: user._id,
+        phone: user.phone,
+        picture: user?.picture,
+      };
+
+      return res.status(200).json({
+        message: "OTP verified successfully",
+        token,
+        userDetails,
+        status: 200,
+      });
+    } catch (err) {
+      console.error("Verify OTP error:", err);
+      return res.status(500).json({ error: "Server error, please try again" });
     }
-
-    // Ensure +91 prefix
-    const formattedPhone = phone.startsWith("+91")
-      ? phone
-      : "+91 " + phone.replace(/^\+91\s*/, "").trim();
-
-    // Validate OTP
-    const storedOtp = otpStorage.get(formattedPhone);
-
-    if (!storedOtp || storedOtp.toString().trim() !== otp.toString().trim()) {
-      return res
-        .status(400)
-        .json({ message: `Invalid or expired OTP ${otp},${storedOtp}` });
-    }
-
-    // Remove OTP from storage
-    otpStorage.delete(formattedPhone);
-
-    // Find customer
-    const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(400).json({ message: "Customer not found" });
-    }
-
-    // Generate JWT
-    const token = Jwt.sign(
-      { email: user.email, id: user._id },
-      process.env.JWT_SECRET || "myjwtsecretkey",
-      { expiresIn: "1h" }
-    );
-
-    const userDetails = {
-      name: user.name,
-      email: user.email,
-      _id: user._id,
-      phone: user.phone,
-      picture: user?.picture,
-    };
-
-    return res.status(200).json({
-      message: "OTP verified successfully",
-      token,
-      userDetails,
-      status: 200,
-    });
-  } catch (err) {
-    console.error("Verify OTP error:", err);
-    return res.status(500).json({ error: "Server error, please try again" });
   }
-};
+;
+
 
 // export const userLogin = async (req: Request, res: Response): Promise<Response> => {
 //   const { email, password, name, picture } = req.body;
