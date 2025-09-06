@@ -73,6 +73,8 @@ export const uploadProfile = async (
   res: Response
 ): Promise<Response> => {
   const { id } = req.params;
+      const { name } = req.body;
+
 
   const file = await uploadFile(req, res);
 
@@ -94,6 +96,10 @@ export const uploadProfile = async (
       imageUrl: result.secure_url,
       public_id: result.public_id,
     };
+
+     if (name) user.name = name;
+
+
     await user.save();
 
     return res.status(200).json({ imageUrl: result.secure_url });
