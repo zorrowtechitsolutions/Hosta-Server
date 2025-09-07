@@ -123,7 +123,7 @@ export const getDonorId = async (
 
   if (!id) throw new createError.BadRequest("Invalid donor ID");
 
-  const donor = await BloodDonor.findById({ userId: id });
+  const donor = await BloodDonor.findOne({ userId: id });
   if (!donor) throw new createError.NotFound("Donor not found");
 
   return res.status(200).json(donor);
