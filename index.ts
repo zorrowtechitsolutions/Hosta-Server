@@ -31,7 +31,8 @@ app.use(
       process.env.AmbulanceSide_URL as string,
       process.env.HospitalSide_URL as string,
       "http://127.0.0.1:5500",
-      https://hosta-hospitals.vercel.app
+      https://hosta-hospitals.vercel.app,
+      http://localhost:5173
     ],
     credentials: true,
   })
