@@ -51,6 +51,8 @@ const bloodDonorSchema: Schema<IBloodDonor> = new Schema(
       enum: ["O+", "O-", "AB+", "AB-", "A+", "A-", "B+", "B-"],
     },
     address: {
+         country: { type: String},
+      dist: { type: String},
       place: { type: String, required: true },
       pincode: { type: Number, required: true },
     },
