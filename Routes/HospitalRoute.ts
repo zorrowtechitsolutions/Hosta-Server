@@ -24,6 +24,8 @@ const hospitalRoutes = Express.Router();
 hospitalRoutes.post("/hospital/registration", trycatch(HospitalRegistration));
 hospitalRoutes.post("/hospital/login", trycatch(login));
 hospitalRoutes.post("/hospital/otp", trycatch(verifyOtp));
+hospitalRoutes.post("/hospital/login/mail", trycatch(HospitalLogin));
+
 
 hospitalRoutes.post(
   "/hospital/password",
