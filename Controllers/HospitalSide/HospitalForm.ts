@@ -724,6 +724,114 @@ const client = twilio(
 //   return res.status(201).json({ message: "Hospital registered successfully." });
 // };
 
+import { Request, Response } from "express";
+import createError from "http-errors";
+import bcrypt from "bcrypt";
+import Jwt, { JwtPayload } from "jsonwebtoken";
+import Hospital from "../../Model/HospitalSchema";
+import { RegistrationSchema } from "./RegistrationJoiSchema";
+import { v2 as cloudinary } from "cloudinary";
+const twilio = require("twilio");
+require("dotenv").config();
+
+const otpStorage: Map<string, number> = new Map();
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+// // Hospital Registration
+// interface WorkingHours {
+//   Monday: { open: string; close: string; isHoliday: boolean };
+//   Tuesday: { open: string; close: string; isHoliday: boolean };
+//   Wednesday: { open: string; close: string; isHoliday: boolean };
+//   Thursday: { open: string; close: string; isHoliday: boolean };
+//   Friday: { open: string; close: string; isHoliday: boolean };
+//   Saturday: { open: string; close: string; isHoliday: boolean };
+//   Sunday: { open: string; close: string; isHoliday: boolean };
+// }
+
+// interface HospitalRequestBody {
+//   name: string;
+//   type: string;
+//   email: string;
+//   mobile: string;
+//   address: string;
+//   latitude: number;
+//   longitude: number;
+//   password: string;
+//   workingHours: WorkingHours;
+// }
+// export const HospitalRegistration = async (
+//   req: Request<{}, {}, HospitalRequestBody>,
+//   res: Response
+// ): Promise<Response> => {
+//   const {
+//     name,
+//     type,
+//     email,
+//     mobile,
+//     address,
+//     latitude,
+//     longitude,
+//     password,
+//     workingHours,
+//   } = req.body;
+
+//   // Validate the request body using Joi
+//   const data = {
+//     name,
+//     email,
+//     mobile,
+//     address,
+//     latitude,
+//     longitude,
+//     password,
+//     workingHours,
+//   };
+//   const { error } = await RegistrationSchema.validate(data);
+//   if (error) {
+//     throw new createError.BadRequest(error?.details[0].message);
+//   }
+
+//   // Check if the hospital already exists with the same email
+//   const existingHospital = await Hospital.findOne({ email });
+//   if (existingHospital) {
+//     throw new createError.Conflict("Email already exists. Please login.");
+//   }
+
+//   // Hash the password before saving it
+//   const hashedPassword = await bcrypt.hash(password, 10);
+
+//   // Prepare the hospital data
+//   const newHospital = new Hospital({
+//     name,
+//     type,
+//     email,
+//     phone: mobile,
+//     address,
+//     latitude,
+//     longitude,
+
+//     password: hashedPassword,
+//     working_hours: Object.entries(workingHours).map(([day, hours]) => ({
+//       day,
+//       opening_time: hours.isHoliday ? null : hours.open,
+//       closing_time: hours.isHoliday ? null : hours.close,
+//       is_holiday: hours.isHoliday,
+//     })),
+//   });
+
+//   // Save the hospital to the database
+//   await newHospital.save();
+
+//   // Respond with a success message
+//   return res.status(201).json({ message: "Hospital registered successfully." });
+// };
+
+
+
 
 // Hospital Registration
 interface WorkingHours {
@@ -742,8 +850,43 @@ interface ClinicWorkingHours {
     evening_session: { open: string; close: string };
     isHoliday: boolean;
     hasBreak: boolean;
+  },
+     Tuesday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+    Wednesday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+     Thursday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+      Friday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
   };
-  // ... same for other days
+      Saturday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+  Sunday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
 }
 
 interface HospitalRequestBody {
@@ -755,7 +898,7 @@ interface HospitalRequestBody {
   latitude: number;
   longitude: number;
   password: string;
-  workingHours: WorkingHours;
+  workingHours?: WorkingHours; // Make optional
   workingHoursClinic?: ClinicWorkingHours; // Optional clinic hours
   hasBreakSchedule?: boolean; // Flag to indicate which schedule to use
 }
@@ -778,7 +921,7 @@ export const HospitalRegistration = async (
     hasBreakSchedule = false
   } = req.body;
 
-  // Validate the request body using Joi
+  // Validate the request body using Joi - update your Joi schema accordingly
   const data = {
     name,
     email,
@@ -787,7 +930,7 @@ export const HospitalRegistration = async (
     latitude,
     longitude,
     password,
-    workingHours,
+    workingHours: hasBreakSchedule ? undefined : workingHours,
     workingHoursClinic: hasBreakSchedule ? workingHoursClinic : undefined,
     hasBreakSchedule
   };
@@ -816,24 +959,23 @@ export const HospitalRegistration = async (
     latitude,
     longitude,
     password: hashedPassword,
-    has_break_schedule: hasBreakSchedule
   };
 
   if (hasBreakSchedule && workingHoursClinic) {
     // Use clinic schedule with breaks
     hospitalData.working_hours_clinic = Object.entries(workingHoursClinic).map(([day, hours]) => ({
       day,
-      morning_session: hours.isHoliday ? null : hours.morning_session,
-      evening_session: hours.isHoliday ? null : hours.evening_session,
+      morning_session: hours.isHoliday ? { open: "", close: "" } : hours.morning_session,
+      evening_session: hours.isHoliday ? { open: "", close: "" } : hours.evening_session,
       is_holiday: hours.isHoliday,
       has_break: hours.hasBreak
     }));
-  } else {
+  } else if (workingHours) {
     // Use regular schedule without breaks
     hospitalData.working_hours = Object.entries(workingHours).map(([day, hours]) => ({
       day,
-      opening_time: hours.isHoliday ? null : hours.open,
-      closing_time: hours.isHoliday ? null : hours.close,
+      opening_time: hours.isHoliday ? "" : hours.open,
+      closing_time: hours.isHoliday ? "" : hours.close,
       is_holiday: hours.isHoliday,
     }));
   }
@@ -1364,4 +1506,3 @@ export const hospitalDelete = async (
   await Hospital.deleteOne({ _id: id });
   return res.status(200).send("Your account deleted successfully");
 };
-
