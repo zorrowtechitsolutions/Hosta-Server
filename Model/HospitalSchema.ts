@@ -98,7 +98,6 @@
 
 // export default Hospital;
 
-
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
@@ -118,6 +117,7 @@ const doctorSchema = new Schema({
 // Speciality Schema
 const specialtySchema = new Schema({
   name: { type: String },
+  sub_specialt: {type: String},
   description: { type: String },
   department_info: { type: String },
   phone: { type: String },
@@ -198,8 +198,8 @@ const hospitalSchema = new Schema({
   type: { type: String, required: true }, // Homeo, Alopathy
   address: { type: String, required: true },
   password: { type: String, required: true },
-  phone: { type: String, required: true },
-  email: { type: String, required: true },
+  phone: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
   emergencyContact: { type: String },
   image: { imageUrl: { type: String }, public_id: { type: String } },
   latitude: { type: Number },
