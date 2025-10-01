@@ -1,3 +1,21 @@
+import { Request, Response } from "express";
+import createError from "http-errors";
+import bcrypt from "bcrypt";
+import Jwt, { JwtPayload } from "jsonwebtoken";
+import Hospital from "../../Model/HospitalSchema";
+import { RegistrationSchema } from "./RegistrationJoiSchema";
+import { v2 as cloudinary } from "cloudinary";
+const twilio = require("twilio");
+require("dotenv").config();
+
+const otpStorage: Map<string, number> = new Map();
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+
 
 // Hospital Registration
 interface WorkingHours {
