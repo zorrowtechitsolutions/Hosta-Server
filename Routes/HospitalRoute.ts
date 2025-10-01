@@ -13,6 +13,8 @@ import {
   updateDoctor,
   updateHospitalDetails,
   updateSpecialty,
+  login,
+  verifyOtp,
 } from "../Controllers/HospitalSide/HospitalForm";
 import { uploadImage } from "../Middlewares/Multer";
 import Authenticator from "../Middlewares/Authenticator";
@@ -20,7 +22,11 @@ import Authenticator from "../Middlewares/Authenticator";
 const hospitalRoutes = Express.Router();
 
 hospitalRoutes.post("/hospital/registration", trycatch(HospitalRegistration));
-hospitalRoutes.post("/hospital/login", trycatch(HospitalLogin));
+hospitalRoutes.post("/hospital/login", trycatch(login));
+hospitalRoutes.post("/hospital/otp", trycatch(verifyOtp));
+hospitalRoutes.post("/hospital/login/mail", trycatch(HospitalLogin));
+
+
 hospitalRoutes.post(
   "/hospital/password",
   Authenticator,

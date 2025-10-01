@@ -42,172 +42,175 @@ export const RegistrationSchema = Joi.object({
     "any.required": "Password is a required field.",
   }),
 
-  workingHours: Joi.object({
-    Monday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Monday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Monday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Monday.",
-      }),
-    }),
-    Tuesday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Tuesday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Tuesday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Tuesday.",
-      }),
-    }),
-    Wednesday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Wednesday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Wednesday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Wednesday.",
-      }),
-    }),
-    Thursday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Thursday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Thursday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Thursday.",
-      }),
-    }),
-    Friday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Friday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Friday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Friday.",
-      }),
-    }),
-    Saturday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Saturday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Saturday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Saturday.",
-      }),
-    }),
-    Sunday: Joi.object({
-      open: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Opening time is required on Sunday.",
-          }),
-        }),
-      close: Joi.string()
-        .allow("")
-        .when("isHoliday", {
-          is: true,
-          then: Joi.optional(),
-          otherwise: Joi.required().messages({
-            "string.empty": "Closing time is required on Sunday.",
-          }),
-        }),
-      isHoliday: Joi.boolean().required().messages({
-        "any.required": "Holiday status is required on Sunday.",
-      }),
-    }),
-  })
-    .required()
-    .messages({
-      "object.base":
-        "Working hours must be an object with day-specific timings.",
-    }),
+  // workingHours: Joi.object({
+  //   Monday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Monday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Monday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Monday.",
+  //     }),
+  //   }),
+  //   Tuesday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Tuesday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Tuesday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Tuesday.",
+  //     }),
+  //   }),
+  //   Wednesday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Wednesday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Wednesday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Wednesday.",
+  //     }),
+  //   }),
+  //   Thursday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Thursday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Thursday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Thursday.",
+  //     }),
+  //   }),
+  //   Friday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Friday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Friday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Friday.",
+  //     }),
+  //   }),
+  //   Saturday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Saturday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Saturday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Saturday.",
+  //     }),
+  //   }),
+  //   Sunday: Joi.object({
+  //     open: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Opening time is required on Sunday.",
+  //         }),
+  //       }),
+  //     close: Joi.string()
+  //       .allow("")
+  //       .when("isHoliday", {
+  //         is: true,
+  //         then: Joi.optional(),
+  //         otherwise: Joi.required().messages({
+  //           "string.empty": "Closing time is required on Sunday.",
+  //         }),
+  //       }),
+  //     isHoliday: Joi.boolean().required().messages({
+  //       "any.required": "Holiday status is required on Sunday.",
+  //     }),
+  //   }),
+  // })
+  //   .required()
+  //   .messages({
+  //     "object.base":
+  //       "Working hours must be an object with day-specific timings.",
+  //   }),
+
+
+
 });

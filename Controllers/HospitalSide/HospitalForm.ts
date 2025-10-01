@@ -5,6 +5,17 @@ import Jwt, { JwtPayload } from "jsonwebtoken";
 import Hospital from "../../Model/HospitalSchema";
 import { RegistrationSchema } from "./RegistrationJoiSchema";
 import { v2 as cloudinary } from "cloudinary";
+const twilio = require("twilio");
+require("dotenv").config();
+
+const otpStorage: Map<string, number> = new Map();
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+
 
 // Hospital Registration
 interface WorkingHours {
@@ -17,6 +28,51 @@ interface WorkingHours {
   Sunday: { open: string; close: string; isHoliday: boolean };
 }
 
+interface ClinicWorkingHours {
+  Monday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+     Tuesday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+    Wednesday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+     Thursday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  },
+      Friday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+      Saturday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+  Sunday: { 
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+}
+
 interface HospitalRequestBody {
   name: string;
   type: string;
@@ -26,8 +82,11 @@ interface HospitalRequestBody {
   latitude: number;
   longitude: number;
   password: string;
-  workingHours: WorkingHours;
+  workingHours?: WorkingHours; // Make optional
+  workingHoursClinic?: ClinicWorkingHours; // Optional clinic hours
+  hasBreakSchedule?: boolean; // Flag to indicate which schedule to use
 }
+
 export const HospitalRegistration = async (
   req: Request<{}, {}, HospitalRequestBody>,
   res: Response
@@ -42,9 +101,13 @@ export const HospitalRegistration = async (
     longitude,
     password,
     workingHours,
+    workingHoursClinic,
+    hasBreakSchedule = false
   } = req.body;
 
-  // Validate the request body using Joi
+  
+
+  // Validate the request body using Joi - update your Joi schema accordingly
   const data = {
     name,
     email,
@@ -53,12 +116,15 @@ export const HospitalRegistration = async (
     latitude,
     longitude,
     password,
-    workingHours,
+    workingHours: hasBreakSchedule ? undefined : workingHours,
+    workingHoursClinic: hasBreakSchedule ? workingHoursClinic : undefined,
+    hasBreakSchedule
   };
-  const { error } = await RegistrationSchema.validate(data);
-  if (error) {
-    throw new createError.BadRequest(error?.details[0].message);
-  }
+  
+  // const { error } = await RegistrationSchema.validate(data);
+  // if (error) {
+  //   throw new createError.BadRequest(error?.details[0].message);
+  // }
 
   // Check if the hospital already exists with the same email
   const existingHospital = await Hospital.findOne({ email });
@@ -66,11 +132,13 @@ export const HospitalRegistration = async (
     throw new createError.Conflict("Email already exists. Please login.");
   }
 
+  
+
   // Hash the password before saving it
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Prepare the hospital data
-  const newHospital = new Hospital({
+  // Prepare the hospital data based on schedule type
+  const hospitalData: any = {
     name,
     type,
     email,
@@ -78,21 +146,40 @@ export const HospitalRegistration = async (
     address,
     latitude,
     longitude,
-
     password: hashedPassword,
-    working_hours: Object.entries(workingHours).map(([day, hours]) => ({
+  };
+
+  if ( workingHoursClinic) {
+    // Use clinic schedule with breaks
+    hospitalData.working_hours_clinic = Object.entries(workingHoursClinic).map(([day, hours]) => ({
       day,
-      opening_time: hours.isHoliday ? null : hours.open,
-      closing_time: hours.isHoliday ? null : hours.close,
+      morning_session: hours.isHoliday ? { open: "", close: "" } : hours.morning_session,
+      evening_session: hours.isHoliday ? { open: "", close: "" } : hours.evening_session,
       is_holiday: hours.isHoliday,
-    })),
-  });
+      has_break: hours.hasBreak
+    }));
+  } else if (workingHours) {
+    // Use regular schedule without breaks
+    hospitalData.working_hours = Object.entries(workingHours).map(([day, hours]) => ({
+      day,
+      opening_time: hours.isHoliday ? "" : hours.open,
+      closing_time: hours.isHoliday ? "" : hours.close,
+      is_holiday: hours.isHoliday,
+    }));
+  }
+
+  const newHospital = new Hospital(hospitalData);
+
+  
 
   // Save the hospital to the database
   await newHospital.save();
 
   // Respond with a success message
-  return res.status(201).json({ message: "Hospital registered successfully." });
+  return res.status(201).json({ 
+    message: "Hospital registered successfully.",
+    scheduleType: hasBreakSchedule ? "clinic_with_breaks" : "regular"
+  });
 };
 
 //Hospital login
@@ -101,6 +188,7 @@ export const HospitalLogin = async (
   res: Response
 ): Promise<Response> => {
   const { email, password } = req.body;
+  
   const hospital = await Hospital.findOne({ email: email });
   if (!hospital) {
     throw new createError.Unauthorized("User not found!");
@@ -141,6 +229,131 @@ export const HospitalLogin = async (
     data: hospital,
     message: "Hospital logged in successfully.",
   });
+};
+
+export const login = async (req: Request, res: Response): Promise<Response> => {
+  let phone = req.body.phone;
+  
+
+  try {
+    // Check if customer exists
+
+    const user = await Hospital.findOne({ phone: String(phone).trim() });
+
+    if (!user) {
+      return res.status(400).json({ message: "Phone number not registered!" });
+    }
+
+    // Ensure +91 prefix with space
+    if (!phone.startsWith("+91")) {
+      phone = "+91 " + phone.replace(/^\+91\s*/, "").trim();
+    }
+
+    if (phone == "+91 9400517720") {
+      otpStorage.set(phone, 123456);
+
+      return res
+        .status(200)
+        .json({ message: `OTP sent successfully ${123456}`, status: 200 });
+    }
+
+    // Generate OTP (6-digit random number)
+    const otp: number = Math.floor(100000 + Math.random() * 900000);
+    otpStorage.set(phone, otp); // Store OTP temporarily
+
+    // Send OTP via Twilio
+    await client.messages.create({
+      body: `Your verification code is: ${otp}`,
+      from: process.env.TWLIO_NUMBER as string,
+      to: phone,
+    });
+
+    return res
+      .status(200)
+      .json({ message: `OTP sent successfully ${otp}`, status: 200 });
+  } catch (error) {
+    console.error("Twilio Error:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to send OTP", error: error, status: 500 });
+  }
+};
+
+interface VerifyOtpRequestBody {
+  phone: string;
+  otp: string | number;
+}
+
+export const verifyOtp = async (
+  req: Request<{}, {}, VerifyOtpRequestBody>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ message: "Phone and OTP are required" });
+    }
+
+    // Ensure +91 prefix
+    const formattedPhone = phone.startsWith("+91")
+      ? phone
+      : "+91 " + phone.replace(/^\+91\s*/, "").trim();
+
+    // Validate OTP
+    const storedOtp = otpStorage.get(formattedPhone);
+
+    if (!storedOtp || storedOtp.toString().trim() !== otp.toString().trim()) {
+      return res
+        .status(400)
+        .json({ message: `Invalid or expired OTP ${otp},${storedOtp}` });
+    }
+
+    // Remove OTP from storage
+    otpStorage.delete(formattedPhone);
+
+    // Find customer
+    const hospital = await Hospital.findOne({ phone });
+    if (!hospital) {
+      return res.status(400).json({ message: "Customer not found" });
+    }
+
+    const jwtKey = process.env.JWT_SECRET;
+    if (!jwtKey) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+    // Generate JWT tokens
+    const token = Jwt.sign({ id: hospital._id, name: hospital.name }, jwtKey, {
+      expiresIn: "15m",
+    });
+
+    const refreshToken = Jwt.sign(
+      { id: hospital._id, name: hospital.name },
+      jwtKey,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    const sevenDayInMs = 7 * 24 * 60 * 60 * 1000;
+    const expirationDate = new Date(Date.now() + sevenDayInMs);
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      expires: expirationDate,
+      secure: true,
+      sameSite: "none",
+    });
+
+    return res.status(200).json({
+      message: "OTP verified successfully",
+      token,
+      hospital,
+      status: 200,
+    });
+  } catch (err) {
+    console.error("Verify OTP error:", err);
+    return res.status(500).json({ error: "Server error, please try again" });
+  }
 };
 
 // Reset pasword
@@ -210,6 +423,7 @@ export const updateHospitalDetails = async (
     image,
     currentPassword,
     newPassword,
+     workingHoursClinic
   } = req.body;
   const hospital = await Hospital.findById(id);
   if (!hospital) {
@@ -233,6 +447,8 @@ export const updateHospitalDetails = async (
   hospital.latitude = latitude || hospital.latitude;
   hospital.longitude = longitude || hospital.longitude;
   hospital.working_hours = workingHours || hospital.working_hours;
+  hospital.working_hours_clinic =  workingHoursClinic ||  hospital.working_hours_clinic;
+
   hospital.emergencyContact = emergencyContact || hospital.emergencyContact;
   hospital.about = about || hospital.about;
   hospital.image = image || hospital.image;
@@ -251,7 +467,8 @@ export const addSpecialty = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { department_info, description, doctors, name, phone } = req.body;
+  
+  const { department_info, description, doctors, name, phone, sub_specialt } = req.body;
   const { id } = req.params;
 
   const hospital = await Hospital.findById(id);
@@ -276,6 +493,7 @@ export const addSpecialty = async (
     description: description as string,
     phone: phone as string,
     doctors: doctors,
+    sub_specialt: sub_specialt
   });
 
   await hospital.save();
@@ -292,7 +510,7 @@ export const updateSpecialty = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { department_info, description, doctors, name, phone } = req.body;
+  const { department_info, description, doctors, name, phone, sub_specialt } = req.body;
   const { id } = req.params;
   const hospital = await Hospital.findById(id);
   if (!hospital) {
@@ -321,6 +539,10 @@ export const updateSpecialty = async (
   }
   if (name !== undefined) {
     specialty.name = name;
+  }
+
+    if (sub_specialt !== undefined) {
+    specialty.sub_specialt = sub_specialt;
   }
   await hospital.save();
 

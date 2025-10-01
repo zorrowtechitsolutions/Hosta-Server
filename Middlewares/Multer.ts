@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import Hospital from "../Model/HospitalSchema";
 import createError from "http-errors";
 import path from "path";
+import userModel from "../Model/UserSchema";
+
 
 const storage = multer.diskStorage({});
 const upload = multer({
@@ -63,3 +65,47 @@ export const uploadImage = async (
     throw new createError.BadRequest("No file uploaded!");
   }
 };
+
+
+export const uploadProfile = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
+  const { name } = req.body;
+
+  const file = await uploadFile(req, res);
+
+  const user = await userModel.findById(id);
+  if (!user) {
+    throw new createError.NotFound("User not found!");
+  }
+
+  // Update name even if no file
+  if (name) {
+    user.name = name;
+  }
+
+  if (file) {
+    // delete old image if exists
+    if (user.picture?.public_id) {
+      await cloudinary.uploader.destroy(user.picture.public_id);
+    }
+
+    const normalizedPath = path.normalize(file.path);
+    const result = await cloudinary.uploader.upload(normalizedPath);
+
+    user.picture = {
+      imageUrl: result.secure_url,
+      public_id: result.public_id,
+    };
+  }
+
+  await user.save();
+
+  return res.status(200).json({
+    message: "Profile updated successfully",
+    user, // return whole updated user, not just image
+  });
+};
+
