@@ -8,35 +8,44 @@ export const sendMail = async (
   res: Response
 ): Promise<Response> => {
   const { from, to, subject, text } = req.body;
-  console.log(from,to)
+  console.log("Request body:", from, to, subject, text);
 
-  // Configure transporter
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: "hostahealthcare@gmail.com",
-      pass: "rtwtujyzvbzgasvp", // Be cautious storing credentials directly
-    },
-  });
+  try {
+    // Configure transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "hostahealthcare@gmail.com",
+        pass: "nafs qdsv yexe zmhi", // App Password
+      },
+    });
 
-  // Define mail options
-  const mailOptions = {
-    from: from,
-    to: to,
-    subject: subject,
-    text: text,
-  };
-  
+    // Define mail options
+    const mailOptions = {
+      from,
+      to,
+      subject,
+      text,
+    };
 
-  // Send email and wait for the result
-  const info = await transporter.sendMail(mailOptions);
+    // Send email (no callback, just await)
+    const info = await transporter.sendMail(mailOptions);
 
-  // Respond with a success message
-  return res.status(200).json({
-    message: "Email sent successfully!",
-    info: info.response,
-  });
+    console.log("Email sent:", info.response);
+
+    return res.status(200).json({
+      message: "Email sent successfully!",
+      info: info.response,
+    });
+  } catch (error: any) {
+    console.error("Error while sending email:", error);
+    return res.status(500).json({
+      message: "Failed to send email",
+      error: error.message,
+    });
+  }
 };
+
 
 // Refresh tokens
 export const Refresh = async (

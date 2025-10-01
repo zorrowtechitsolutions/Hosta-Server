@@ -95,8 +95,7 @@ const userLogin = async (req, res) => {
 };
 exports.userLogin = userLogin;
 const login = async (req, res) => {
-    let phone = "6282811230";
-    console.log(phone);
+    let phone = req.body.phone;
     try {
         // Check if customer exists
         const user = await UserSchema_1.default.findOne({ phone: String(phone).trim() });
@@ -116,18 +115,21 @@ const login = async (req, res) => {
             from: process.env.TWLIO_NUMBER,
             to: phone,
         });
-        return res.status(200).json({ message: `OTP sent successfully ${otp}`, status: 200 });
+        return res
+            .status(200)
+            .json({ message: `OTP sent successfully ${otp}`, status: 200 });
     }
     catch (error) {
         console.error("Twilio Error:", error);
-        return res.status(500).json({ message: "Failed to send OTP", error: error, status: 500 });
+        return res
+            .status(500)
+            .json({ message: "Failed to send OTP", error: error, status: 500 });
     }
 };
 exports.login = login;
 const verifyOtp = async (req, res) => {
     try {
         const { phone, otp } = req.body;
-        console.log(req.body);
         if (!phone || !otp) {
             return res.status(400).json({ message: "Phone and OTP are required" });
         }
@@ -137,8 +139,10 @@ const verifyOtp = async (req, res) => {
             : "+91 " + phone.replace(/^\+91\s*/, "").trim();
         // Validate OTP
         const storedOtp = otpStorage.get(formattedPhone);
-        if (!storedOtp || storedOtp.toString() !== otp.toString()) {
-            return res.status(400).json({ message: "Invalid or expired OTP" });
+        if (!storedOtp || storedOtp.toString().trim() !== otp.toString().trim()) {
+            return res
+                .status(400)
+                .json({ message: `Invalid or expired OTP ${otp},${storedOtp}` });
         }
         // Remove OTP from storage
         otpStorage.delete(formattedPhone);

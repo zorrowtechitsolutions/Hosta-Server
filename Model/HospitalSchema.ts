@@ -102,17 +102,34 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 // Doctor Schema
+// const doctorSchema = new Schema({
+//   name: { type: String },
+//   qualification: { type: String },
+//   consulting: [
+//     {
+//       day: { type: String },
+//       start_time: { type: String },
+//       end_time: { type: String },
+//     },
+//   ],
+// });
+
 const doctorSchema = new Schema({
   name: { type: String },
   qualification: { type: String },
   consulting: [
     {
-      day: { type: String },
-      start_time: { type: String },
-      end_time: { type: String },
+      day: { type: String, required: true },
+      sessions: [
+        {
+          start_time: { type: String, required: true },
+          end_time: { type: String, required: true },
+        }
+      ]
     },
   ],
 });
+
 
 // Speciality Schema
 const specialtySchema = new Schema({
@@ -216,6 +233,3 @@ const hospitalSchema = new Schema({
 const Hospital = mongoose.model("Hospital", hospitalSchema);
 
 export default Hospital;
-
-
-
