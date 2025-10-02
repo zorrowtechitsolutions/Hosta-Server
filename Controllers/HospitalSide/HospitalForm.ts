@@ -361,8 +361,9 @@ export const resetPassword = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { email, password } = req.body;
-  const hospital = await Hospital.findOne({ email: email });
+ const { phone, password } = req.body;
+  
+  const hospital = await Hospital.findOne({ phone: phone });
   if (!hospital) {
     throw new createError.NotFound("No user found");
   }
