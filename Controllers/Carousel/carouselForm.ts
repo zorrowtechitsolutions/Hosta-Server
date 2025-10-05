@@ -104,7 +104,7 @@ export const updateAd = async (req: Request, res: Response) => {
 // GET /api/ads/nearby?lat=...&lng=...
 
 
-const GetAds = async (req: Request, res: Response) => {
+export const GetAds = async (req: Request, res: Response) => {
   try {
     const { lat, lng } = req.query;
 
