@@ -129,10 +129,9 @@ export const GetAds = async (req: Request, res: Response) => {
     const userLng = parseFloat(lng as string);
     const radiusInMeters = 5000; // 5km
 
+
     // Fetch hospitals that have ads
-    const hospitals = await Hospital.find({
-      latitude: { $exists: true },
-      longitude: { $exists: true },
+    const ads = await Hospital.find({
       ads: { $exists: true, $not: { $size: 0 } },
     });
 
@@ -157,11 +156,12 @@ export const GetAds = async (req: Request, res: Response) => {
       }
     });
 
-    res.json(nearbyAds);
+    res.json(ads);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
   }
 };
+
 
 // GET /api/hospitals/:id/ads - Get all ads for a specific hospital
 export const GetAdsHospital = async (req: Request, res: Response) => {
