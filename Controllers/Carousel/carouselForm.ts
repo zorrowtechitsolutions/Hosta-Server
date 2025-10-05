@@ -111,10 +111,19 @@ export const GetAds = async (req: Request, res: Response) => {
   try {
     const { lat, lng } = req.query;
 
-    if (!lat || !lng)
+    const nearbyAds: any[] = [];
+
+    if (!lat || !lng) {
+      const hospitals = await Hospital.find();
+      hospitals.forEach((hospital) => {
+        hospital.ads.forEach((ad) => {
+          if (ad.isActive) nearbyAds.push(ad);
+        });
+      });
       return res
-        .status(400)
-        .json({ message: "Latitude and longitude required" });
+        .status(200)
+        .json({ data: nearbyAds, message: "All active ads" });
+    }
 
     const userLat = parseFloat(lat as string);
     const userLng = parseFloat(lng as string);
@@ -128,7 +137,7 @@ export const GetAds = async (req: Request, res: Response) => {
     });
 
     // Filter ads manually based on distance
-    const nearbyAds: any[] = [];
+
     const R = 6371; // km
     hospitals.forEach((hospital) => {
       const dLat = ((hospital.latitude! - userLat) * Math.PI) / 180;
