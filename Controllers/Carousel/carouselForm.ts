@@ -109,50 +109,19 @@ export const updateAd = async (req: Request, res: Response) => {
 
 export const GetAds = async (req: Request, res: Response) => {
   try {
-    const { lat, lng } = req.query;
-
-    if (!lat || !lng)
-      return res
-        .status(400)
-        .json({ message: "Latitude and longitude required" });
-
-    const userLat = parseFloat(lat as string);
-    const userLng = parseFloat(lng as string);
-    const radiusInMeters = 5000; // 5km
 
     // Fetch hospitals that have ads
-    const hospitals = await Hospital.find({
-      latitude: { $exists: true },
-      longitude: { $exists: true },
+    const ads = await Hospital.find({
       ads: { $exists: true, $not: { $size: 0 } },
     });
 
-    // Filter ads manually based on distance
-    const nearbyAds: any[] = [];
-    const R = 6371; // km
-    hospitals.forEach((hospital) => {
-      const dLat = ((hospital.latitude! - userLat) * Math.PI) / 180;
-      const dLon = ((hospital.longitude! - userLng) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((userLat * Math.PI) / 180) *
-          Math.cos((hospital.latitude! * Math.PI) / 180) *
-          Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c * 1000; // meters
 
-      if (distance <= radiusInMeters) {
-        hospital.ads.forEach((ad) => {
-          if (ad.isActive) nearbyAds.push(ad);
-        });
-      }
-    });
-
-    res.json(nearbyAds);
+    res.json(ads);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
   }
 };
+
 
 // GET /api/hospitals/:id/ads - Get all ads for a specific hospital
 export const GetAdsHospital = async (req: Request, res: Response) => {
