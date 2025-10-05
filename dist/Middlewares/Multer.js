@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImage = void 0;
+exports.uploadProfile = exports.uploadImage = void 0;
 const multer_1 = __importDefault(require("multer"));
 const cloudinary_1 = require("cloudinary");
 const HospitalSchema_1 = __importDefault(require("../Model/HospitalSchema"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const path_1 = __importDefault(require("path"));
+const UserSchema_1 = __importDefault(require("../Model/UserSchema"));
 const storage = multer_1.default.diskStorage({});
 const upload = (0, multer_1.default)({
     storage: storage,
@@ -57,4 +58,35 @@ const uploadImage = async (req, res) => {
     }
 };
 exports.uploadImage = uploadImage;
+const uploadProfile = async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    const file = await uploadFile(req, res);
+    const user = await UserSchema_1.default.findById(id);
+    if (!user) {
+        throw new http_errors_1.default.NotFound("User not found!");
+    }
+    // Update name even if no file
+    if (name) {
+        user.name = name;
+    }
+    if (file) {
+        // delete old image if exists
+        if (user.picture?.public_id) {
+            await cloudinary_1.v2.uploader.destroy(user.picture.public_id);
+        }
+        const normalizedPath = path_1.default.normalize(file.path);
+        const result = await cloudinary_1.v2.uploader.upload(normalizedPath);
+        user.picture = {
+            imageUrl: result.secure_url,
+            public_id: result.public_id,
+        };
+    }
+    await user.save();
+    return res.status(200).json({
+        message: "Profile updated successfully",
+        user, // return whole updated user, not just image
+    });
+};
+exports.uploadProfile = uploadProfile;
 //# sourceMappingURL=Multer.js.map

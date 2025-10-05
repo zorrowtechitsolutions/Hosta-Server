@@ -9,29 +9,38 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const sendMail = async (req, res) => {
     const { from, to, subject, text } = req.body;
-    console.log(from, to);
-    // Configure transporter
-    const transporter = nodemailer_1.default.createTransport({
-        service: "gmail",
-        auth: {
-            user: "hostahealthcare@gmail.com",
-            pass: "rtwtujyzvbzgasvp", // Be cautious storing credentials directly
-        },
-    });
-    // Define mail options
-    const mailOptions = {
-        from: from,
-        to: to,
-        subject: subject,
-        text: text,
-    };
-    // Send email and wait for the result
-    const info = await transporter.sendMail(mailOptions);
-    // Respond with a success message
-    return res.status(200).json({
-        message: "Email sent successfully!",
-        info: info.response,
-    });
+    console.log("Request body:", from, to, subject, text);
+    try {
+        // Configure transporter
+        const transporter = nodemailer_1.default.createTransport({
+            service: "gmail",
+            auth: {
+                user: "hostahealthcare@gmail.com",
+                pass: "nafs qdsv yexe zmhi", // App Password
+            },
+        });
+        // Define mail options
+        const mailOptions = {
+            from,
+            to,
+            subject,
+            text,
+        };
+        // Send email (no callback, just await)
+        const info = await transporter.sendMail(mailOptions);
+        console.log("Email sent:", info.response);
+        return res.status(200).json({
+            message: "Email sent successfully!",
+            info: info.response,
+        });
+    }
+    catch (error) {
+        console.error("Error while sending email:", error);
+        return res.status(500).json({
+            message: "Failed to send email",
+            error: error.message,
+        });
+    }
 };
 exports.sendMail = sendMail;
 // Refresh tokens

@@ -96,7 +96,7 @@ const getDonorId = async (req, res) => {
     const { id } = req.params;
     if (!id)
         throw new http_errors_1.default.BadRequest("Invalid donor ID");
-    const donor = await BloodDonarSchema_1.default.findById({ userId: id });
+    const donor = await BloodDonarSchema_1.default.findOne({ userId: id });
     if (!donor)
         throw new http_errors_1.default.NotFound("Donor not found");
     return res.status(200).json(donor);
