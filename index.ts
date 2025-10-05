@@ -17,6 +17,7 @@ import AmbulanceRoutes from "./Routes/AmbulanceRoutes";
 import BloodDonarRoutes from "./Routes/BloodDonarRoutes";
 import MedicineRemainderRoutes from "./Routes/MedicineRemainderRoutes";
 import LabRoutes from "./Routes/LabRoutes";
+import CarouselRouter from "./Routes/CarouselRoutes";
 // import {
 //   // checkMissedDoses,
 //   checkAndRefillMedicines,
@@ -106,6 +107,7 @@ app.use("/api", AmbulanceRoutes);
 app.use("/api", BloodDonarRoutes);
 app.use("/api", MedicineRemainderRoutes);
 app.use("/api", LabRoutes);
+app.use("/api", CarouselRouter);
 
 connectToDb();
 
