@@ -133,7 +133,6 @@ const doctorSchema = new Schema({
 // Speciality Schema
 const specialtySchema = new Schema({
   name: { type: String },
-  sub_specialt: { type: String },
   description: { type: String },
   department_info: { type: String },
   phone: { type: String },
