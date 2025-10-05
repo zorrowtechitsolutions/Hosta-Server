@@ -214,6 +214,10 @@ const adSchema = new Schema({
   endDate: { type: Date },
   isActive: { type: Boolean, default: true },
 });
+adSchema.virtual("activeStatus").get(function () {
+  if (!this.endDate) return this.isActive; // if no endDate, return stored isActive
+  return this.endDate > new Date() && this.isActive;
+});
 
 // Hospital Schema
 const hospitalSchema = new Schema({

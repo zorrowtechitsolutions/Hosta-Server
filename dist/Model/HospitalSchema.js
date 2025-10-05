@@ -126,7 +126,6 @@ const doctorSchema = new Schema({
 // Speciality Schema
 const specialtySchema = new Schema({
     name: { type: String },
-    sub_specialt: { type: String },
     description: { type: String },
     department_info: { type: String },
     phone: { type: String },
@@ -198,6 +197,11 @@ const adSchema = new Schema({
     startDate: { type: Date, default: Date.now },
     endDate: { type: Date },
     isActive: { type: Boolean, default: true },
+});
+adSchema.virtual("activeStatus").get(function () {
+    if (!this.endDate)
+        return this.isActive; // if no endDate, return stored isActive
+    return this.endDate > new Date() && this.isActive;
 });
 // Hospital Schema
 const hospitalSchema = new Schema({

@@ -22,6 +22,7 @@ const AmbulanceRoutes_1 = __importDefault(require("./Routes/AmbulanceRoutes"));
 const BloodDonarRoutes_1 = __importDefault(require("./Routes/BloodDonarRoutes"));
 const MedicineRemainderRoutes_1 = __importDefault(require("./Routes/MedicineRemainderRoutes"));
 const LabRoutes_1 = __importDefault(require("./Routes/LabRoutes"));
+const CarouselRoutes_1 = __importDefault(require("./Routes/CarouselRoutes"));
 // import {
 //   // checkMissedDoses,
 //   checkAndRefillMedicines,
@@ -93,6 +94,7 @@ app.use("/api", AmbulanceRoutes_1.default);
 app.use("/api", BloodDonarRoutes_1.default);
 app.use("/api", MedicineRemainderRoutes_1.default);
 app.use("/api", LabRoutes_1.default);
+app.use("/api", CarouselRoutes_1.default);
 (0, dbConnection_1.default)();
 app.use(ErrorHandler_1.default);
 app.listen(process.env.Port, () => {

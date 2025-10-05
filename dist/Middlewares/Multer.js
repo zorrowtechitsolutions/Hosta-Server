@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadProfile = exports.uploadImage = void 0;
+exports.uploadProfile = exports.uploadImage = exports.uploadFile = exports.upload = void 0;
 const multer_1 = __importDefault(require("multer"));
 const cloudinary_1 = require("cloudinary");
 const HospitalSchema_1 = __importDefault(require("../Model/HospitalSchema"));
@@ -11,7 +11,7 @@ const http_errors_1 = __importDefault(require("http-errors"));
 const path_1 = __importDefault(require("path"));
 const UserSchema_1 = __importDefault(require("../Model/UserSchema"));
 const storage = multer_1.default.diskStorage({});
-const upload = (0, multer_1.default)({
+exports.upload = (0, multer_1.default)({
     storage: storage,
     limits: {
         fileSize: 1024 * 1024 * 5, // 5MB file size limit
@@ -24,7 +24,7 @@ cloudinary_1.v2.config({
 });
 const uploadFile = (req, res) => {
     return new Promise((resolve, reject) => {
-        upload.single("image")(req, res, (err) => {
+        exports.upload.single("image")(req, res, (err) => {
             if (err) {
                 return reject(err);
             }
@@ -32,9 +32,10 @@ const uploadFile = (req, res) => {
         });
     });
 };
+exports.uploadFile = uploadFile;
 const uploadImage = async (req, res) => {
     const { id } = req.params;
-    const file = await uploadFile(req, res);
+    const file = await (0, exports.uploadFile)(req, res);
     const hospital = await HospitalSchema_1.default.findById(id);
     if (!hospital) {
         throw new http_errors_1.default.NotFound("Hospital not found!");
@@ -61,7 +62,7 @@ exports.uploadImage = uploadImage;
 const uploadProfile = async (req, res) => {
     const { id } = req.params;
     const { name } = req.body;
-    const file = await uploadFile(req, res);
+    const file = await (0, exports.uploadFile)(req, res);
     const user = await UserSchema_1.default.findById(id);
     if (!user) {
         throw new http_errors_1.default.NotFound("User not found!");
