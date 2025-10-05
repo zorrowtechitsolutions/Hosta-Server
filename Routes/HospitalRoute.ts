@@ -29,7 +29,6 @@ hospitalRoutes.post("/hospital/login/mail", trycatch(HospitalLogin));
 
 hospitalRoutes.post(
   "/hospital/password",
-  Authenticator,
   trycatch(resetPassword)
 );
 hospitalRoutes.get(

@@ -70,6 +70,9 @@ const bloodDonorSchema = new mongoose_1.Schema({
         enum: ["O+", "O-", "AB+", "AB-", "A+", "A-", "B+", "B-"],
     },
     address: {
+        country: { type: String },
+        state: { type: String },
+        district: { type: String },
         place: { type: String, required: true },
         pincode: { type: Number, required: true },
     },

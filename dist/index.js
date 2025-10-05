@@ -32,7 +32,9 @@ app.use((0, cors_1.default)({
         process.env.UserSide_URL,
         process.env.AmbulanceSide_URL,
         process.env.HospitalSide_URL,
-        "http://127.0.0.1:5500"
+        "http://127.0.0.1:5500",
+        "https://hosta-hospitals.vercel.app",
+        "http://localhost:5173"
     ],
     credentials: true,
 }));

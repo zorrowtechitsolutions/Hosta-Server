@@ -361,8 +361,9 @@ export const resetPassword = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { email, password } = req.body;
-  const hospital = await Hospital.findOne({ email: email });
+ const { phone, password } = req.body;
+  
+  const hospital = await Hospital.findOne({ phone: phone });
   if (!hospital) {
     throw new createError.NotFound("No user found");
   }
@@ -479,12 +480,12 @@ export const addSpecialty = async (
   // Check the spectilty already exist
   const isExist = hospital.specialties.find(
     (element) =>
-      element.name?.trim().toLowerCase() ===
-      name.toString().trim().toLowerCase()
+      element.sub_specialt?.trim().toLowerCase() ===
+      sub_specialt.toString().trim().toLowerCase()
   );
 
   if (isExist) {
-    throw new createError.Conflict("Specialty is already exist!");
+    throw new createError.Conflict("Sub specialty is already exist!");
   }
 
   hospital.specialties.push({

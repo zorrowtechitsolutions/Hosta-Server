@@ -124,17 +124,16 @@ const doctorSchema = new Schema({
         {
           start_time: { type: String, required: true },
           end_time: { type: String, required: true },
-        }
-      ]
+        },
+      ],
     },
   ],
 });
 
-
 // Speciality Schema
 const specialtySchema = new Schema({
   name: { type: String },
-  sub_specialt: {type: String},
+  sub_specialt: { type: String },
   description: { type: String },
   department_info: { type: String },
   phone: { type: String },
@@ -177,22 +176,20 @@ const workingHoursSchema = new Schema({
   is_holiday: { type: Boolean, default: false },
 });
 
-
 // Working Hours Schema
 const workingHoursClinicSchema = new Schema({
   day: { type: String },
   morning_session: {
     open: { type: String },
-    close: { type: String }
+    close: { type: String },
   },
   evening_session: {
     open: { type: String },
-    close: { type: String }
+    close: { type: String },
   },
   is_holiday: { type: Boolean, default: false },
-  has_break: { type: Boolean, default: false } // Flag to indicate if clinic has break
+  has_break: { type: Boolean, default: false }, // Flag to indicate if clinic has break
 });
-
 
 // Booking Schema
 const bookingSchema = new Schema({
@@ -209,6 +206,16 @@ const bookingSchema = new Schema({
   },
 });
 
+// Ads Schema
+const adSchema = new Schema({
+  title: { type: String }, // Optional
+  imageUrl: { type: String, required: true },
+  public_id: { type: String, required: true },
+  startDate: { type: Date, default: Date.now },
+  endDate: { type: Date },
+  isActive: { type: Boolean, default: true },
+});
+
 // Hospital Schema
 const hospitalSchema = new Schema({
   name: { type: String, required: true },
@@ -223,10 +230,11 @@ const hospitalSchema = new Schema({
   longitude: { type: Number },
   about: { type: String },
   working_hours: [workingHoursSchema],
-  working_hours_clinic: [workingHoursClinicSchema], 
+  working_hours_clinic: [workingHoursClinicSchema],
   reviews: [reviewSchema],
   specialties: [specialtySchema],
   booking: [bookingSchema],
+  ads: [adSchema],
 });
 
 // Create the model
