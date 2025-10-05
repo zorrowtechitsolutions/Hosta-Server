@@ -2,50 +2,57 @@ import { Request, Response } from "express";
 import createError from "http-errors";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
-import { uploadImage } from "../../Middlewares/Multer";
+import { uploadFile } from "../../Middlewares/Multer";
 import Hospital from "../../Model/HospitalSchema";
+import { log } from "console";
 
 // POST /api/hospitals/:id/ads
 export const uploadAd = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  // Upload file with multer
-  await uploadImage(req, res);
-  const file = req.file;
+    const file = req.file; // uploaded image
+    const { title, startDate, endDate } = req.body;
+    console.log(req.body);
 
-  // Find hospital
-  const hospital = await Hospital.findById(id);
-  if (!hospital) {
-    throw new createError.NotFound("Hospital not found!");
+    // Find hospital
+    const hospital = await Hospital.findById(id);
+    if (!hospital) {
+      throw new createError.NotFound("Hospital not found!");
+    }
+
+    if (!file) {
+      throw new createError.BadRequest("No file uploaded!");
+    }
+
+    const normalizedPath = path.normalize(file.path);
+    console.log("Uploading file at path:", normalizedPath);
+
+    const result = await cloudinary.uploader.upload(normalizedPath);
+
+    console.log("Cloudinary upload result:", result);
+
+    // Add new ad to hospital.ads
+    const newAd = {
+      imageUrl: result.secure_url as string,
+      public_id: result.public_id as string,
+      title: req.body.title || "",
+      startDate: req.body.startDate || Date.now(),
+      endDate: req.body.endDate || null,
+      isActive: true,
+    };
+
+    hospital.ads.push(newAd);
+    await hospital.save();
+
+    return res.status(201).json(newAd);
+  } catch (error) {
+    console.error("Error uploading ad:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-
-  if (!file) {
-    throw new createError.BadRequest("No file uploaded!");
-  }
-
-  // Upload to Cloudinary
-  const normalizedPath = path.normalize(file.path);
-  const result = await cloudinary.uploader.upload(normalizedPath, {
-    folder: `hospital_ads/${id}`,
-  });
-
-  // Add new ad to hospital.ads
-  const newAd = {
-    imageUrl: result.secure_url,
-    public_id: result.public_id,
-    title: req.body.title || "",
-    startDate: req.body.startDate || Date.now(),
-    endDate: req.body.endDate || null,
-    isActive: true,
-  };
-
-  hospital.ads.push(newAd);
-  await hospital.save();
-
-  return res.status(201).json(newAd);
 };
 
 // DELETE /api/hospitals/:hospitalId/ads/:adId
@@ -54,7 +61,7 @@ export const deleteAd = async (req: Request, res: Response) => {
   const hospital = await Hospital.findById(hospitalId);
   if (!hospital) throw new createError.NotFound("Hospital not found!");
 
-  const ad = hospital.ads.id(adId);
+  const ad = hospital.ads.find((ad) => ad._id?.toString() === adId.toString());
   if (!ad) throw new createError.NotFound("Ad not found!");
 
   // Delete image from Cloudinary
@@ -66,34 +73,30 @@ export const deleteAd = async (req: Request, res: Response) => {
   return res.status(200).json({ message: "Ad deleted successfully" });
 };
 
-// PUT /api/hospitals/:hospitalId/ads/:adId
+// In your controller
 export const updateAd = async (req: Request, res: Response) => {
   const { hospitalId, adId } = req.params;
+
+  // At this point, Multer must already have processed the request
+  const file = req.file; // uploaded image
+  const { title, startDate, endDate, isActive } = req.body; // text fields
+
   const hospital = await Hospital.findById(hospitalId);
   if (!hospital) throw new createError.NotFound("Hospital not found!");
 
   const ad = hospital.ads.id(adId);
   if (!ad) throw new createError.NotFound("Ad not found!");
 
-  // Update title / dates
-  if (req.body.title) ad.title = req.body.title;
-  if (req.body.startDate) ad.startDate = req.body.startDate;
-  if (req.body.endDate) ad.endDate = req.body.endDate;
-  if (req.body.isActive !== undefined) ad.isActive = req.body.isActive;
+  if (title) ad.title = title;
+  if (startDate) ad.startDate = startDate;
+  if (endDate) ad.endDate = endDate;
+  if (isActive !== undefined) ad.isActive = isActive === "true";
 
-  // Replace image if file uploaded
-  const file = await uploadImage(req, res);
   if (file) {
     if (ad.public_id) await cloudinary.uploader.destroy(ad.public_id);
-    if (!req.file || !req.file.path) {
-      throw new createError.BadRequest("No file uploaded for ad image update!");
-    }
-    const result = await cloudinary.uploader.upload(
-      path.normalize(req.file.path),
-      {
-        folder: `hospital_ads/${hospitalId}`,
-      }
-    );
+    const result = await cloudinary.uploader.upload(path.normalize(file.path), {
+      folder: `hospital_ads/${hospitalId}`,
+    });
     ad.imageUrl = result.secure_url;
     ad.public_id = result.public_id;
   }

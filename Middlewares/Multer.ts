@@ -6,9 +6,8 @@ import createError from "http-errors";
 import path from "path";
 import userModel from "../Model/UserSchema";
 
-
 const storage = multer.diskStorage({});
-const upload = multer({
+export const upload = multer({
   storage: storage,
   limits: {
     fileSize: 1024 * 1024 * 5, // 5MB file size limit
@@ -21,7 +20,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadFile = (req: Request, res: Response): Promise<any> => {
+export const uploadFile = (req: Request, res: Response): Promise<any> => {
   return new Promise((resolve, reject) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
@@ -66,7 +65,6 @@ export const uploadImage = async (
   }
 };
 
-
 export const uploadProfile = async (
   req: Request,
   res: Response
@@ -108,4 +106,3 @@ export const uploadProfile = async (
     user, // return whole updated user, not just image
   });
 };
-
