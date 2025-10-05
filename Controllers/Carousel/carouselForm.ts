@@ -2,11 +2,14 @@ import { Request, Response } from "express";
 import createError from "http-errors";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
-import { uploadImage} from "../../Middlewares/Multer";
+import { uploadImage } from "../../Middlewares/Multer";
 import Hospital from "../../Model/HospitalSchema";
 
 // POST /api/hospitals/:id/ads
-export const uploadAd = async (req: Request, res: Response): Promise<Response> => {
+export const uploadAd = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { id } = req.params;
 
   // Upload file with multer
@@ -45,8 +48,6 @@ export const uploadAd = async (req: Request, res: Response): Promise<Response> =
   return res.status(201).json(newAd);
 };
 
-
-
 // DELETE /api/hospitals/:hospitalId/ads/:adId
 export const deleteAd = async (req: Request, res: Response) => {
   const { hospitalId, adId } = req.params;
@@ -64,8 +65,6 @@ export const deleteAd = async (req: Request, res: Response) => {
 
   return res.status(200).json({ message: "Ad deleted successfully" });
 };
-
-
 
 // PUT /api/hospitals/:hospitalId/ads/:adId
 export const updateAd = async (req: Request, res: Response) => {
@@ -89,9 +88,12 @@ export const updateAd = async (req: Request, res: Response) => {
     if (!req.file || !req.file.path) {
       throw new createError.BadRequest("No file uploaded for ad image update!");
     }
-    const result = await cloudinary.uploader.upload(path.normalize(req.file.path), {
-      folder: `hospital_ads/${hospitalId}`,
-    });
+    const result = await cloudinary.uploader.upload(
+      path.normalize(req.file.path),
+      {
+        folder: `hospital_ads/${hospitalId}`,
+      }
+    );
     ad.imageUrl = result.secure_url;
     ad.public_id = result.public_id;
   }
@@ -100,15 +102,16 @@ export const updateAd = async (req: Request, res: Response) => {
   return res.status(200).json(ad);
 };
 
-
 // GET /api/ads/nearby?lat=...&lng=...
-
 
 export const GetAds = async (req: Request, res: Response) => {
   try {
     const { lat, lng } = req.query;
 
-    if (!lat || !lng) return res.status(400).json({ message: "Latitude and longitude required" });
+    if (!lat || !lng)
+      return res
+        .status(400)
+        .json({ message: "Latitude and longitude required" });
 
     const userLat = parseFloat(lat as string);
     const userLng = parseFloat(lng as string);
@@ -146,4 +149,15 @@ export const GetAds = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
   }
+};
+
+// GET /api/hospitals/:id/ads - Get all ads for a specific hospital
+export const GetAdsHospital = async (req: Request, res: Response) => {
+  const hospitalId = req.params.id;
+  const hospital = await Hospital.findById(hospitalId);
+  if (!hospital) {
+    return res.status(404).json({ message: "Hospital not found" });
+  }
+
+  return res.status(200).json(hospital.ads);
 };

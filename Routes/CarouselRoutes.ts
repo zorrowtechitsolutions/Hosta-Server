@@ -7,26 +7,28 @@ import {
   GetAds,
 } from "../Controllers/Carousel/carouselForm";
 
-const router = Router();
+const CarouselRouter = Router();
 
 // -------------------------
 // Hospital Ads Routes
 // -------------------------
 
+// Get /api 
+
 // Create/upload a new ad for a hospital
 // POST /api/hospitals/:id/ads
-router.post("/hospitals/:id/ads", uploadAd);
+CarouselRouter.post("/hospitals/:id/ads", uploadAd);
 
 // Update an existing ad
 // PUT /api/hospitals/:hospitalId/ads/:adId
-router.put("/hospitals/:hospitalId/ads/:adId", updateAd);
+CarouselRouter.put("/hospitals/:hospitalId/ads/:adId", updateAd);
 
 // Delete an ad
 // DELETE /api/hospitals/:hospitalId/ads/:adId
-router.delete("/hospitals/:hospitalId/ads/:adId", deleteAd);
+CarouselRouter.delete("/hospitals/:hospitalId/ads/:adId", deleteAd);
 
 // Get nearby ads
 // GET /api/ads/nearby?lat=...&lng=...
-router.get("/ads/nearby", GetAds);
+CarouselRouter.get("/ads/nearby", GetAds);
 
-export default router;
+export default CarouselRouter;
