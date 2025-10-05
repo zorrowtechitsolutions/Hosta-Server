@@ -282,17 +282,17 @@ const updateHospitalDetails = async (req, res) => {
 exports.updateHospitalDetails = updateHospitalDetails;
 // Add a new specialty
 const addSpecialty = async (req, res) => {
-    const { department_info, description, doctors, name, phone, sub_specialt } = req.body;
+    const { department_info, description, doctors, name, phone } = req.body;
     const { id } = req.params;
     const hospital = await HospitalSchema_1.default.findById(id);
     if (!hospital) {
         throw new http_errors_1.default.NotFound("Hospital not found. Wrong input");
     }
     // Check the spectilty already exist
-    const isExist = hospital.specialties.find((element) => element.sub_specialt?.trim().toLowerCase() ===
-        sub_specialt.toString().trim().toLowerCase());
+    const isExist = hospital.specialties.find((element) => element.name?.trim().toLowerCase() ===
+        name.toString().trim().toLowerCase());
     if (isExist) {
-        throw new http_errors_1.default.Conflict("Sub specialty is already exist!");
+        throw new http_errors_1.default.Conflict("Specialty is already exist!");
     }
     hospital.specialties.push({
         name: name,
@@ -300,7 +300,6 @@ const addSpecialty = async (req, res) => {
         description: description,
         phone: phone,
         doctors: doctors,
-        sub_specialt: sub_specialt
     });
     await hospital.save();
     return res.status(201).json({
@@ -312,7 +311,7 @@ const addSpecialty = async (req, res) => {
 exports.addSpecialty = addSpecialty;
 // Update Specialty
 const updateSpecialty = async (req, res) => {
-    const { department_info, description, doctors, name, phone, sub_specialt } = req.body;
+    const { department_info, description, doctors, name, phone } = req.body;
     const { id } = req.params;
     const hospital = await HospitalSchema_1.default.findById(id);
     if (!hospital) {
@@ -338,9 +337,6 @@ const updateSpecialty = async (req, res) => {
     }
     if (name !== undefined) {
         specialty.name = name;
-    }
-    if (sub_specialt !== undefined) {
-        specialty.sub_specialt = sub_specialt;
     }
     await hospital.save();
     return res.status(201).json({
