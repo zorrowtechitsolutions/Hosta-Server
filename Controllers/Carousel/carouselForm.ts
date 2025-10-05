@@ -111,6 +111,9 @@ export const GetAds = async (req: Request, res: Response) => {
   try {
     const { lat, lng } = req.query;
 
+    console.log("Received lat and lng:", lat, lng);
+    
+
     const nearbyAds: any[] = [];
 
     if (!lat || !lng) {
@@ -127,10 +130,11 @@ export const GetAds = async (req: Request, res: Response) => {
 
     const userLat = parseFloat(lat as string);
     const userLng = parseFloat(lng as string);
-    const radiusInMeters = 5000; // 5km
+    const radiusInMeters = 50000; // 50km
+
 
     // Fetch hospitals that have ads
-    const ads = await Hospital.find({
+    const hospitals = await Hospital.find({
       ads: { $exists: true, $not: { $size: 0 } },
     });
 
@@ -171,4 +175,4 @@ export const GetAdsHospital = async (req: Request, res: Response) => {
   }
 
   return res.status(200).json(hospital.ads);
-};
+}
