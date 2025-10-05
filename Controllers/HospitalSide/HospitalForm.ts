@@ -469,7 +469,7 @@ export const addSpecialty = async (
   res: Response
 ): Promise<Response> => {
   
-  const { department_info, description, doctors, name, phone, sub_specialt } = req.body;
+  const { department_info, description, doctors, name, phone} = req.body;
   const { id } = req.params;
 
   const hospital = await Hospital.findById(id);
@@ -480,13 +480,14 @@ export const addSpecialty = async (
   // Check the spectilty already exist
   const isExist = hospital.specialties.find(
     (element) =>
-      element.sub_specialt?.trim().toLowerCase() ===
-      sub_specialt.toString().trim().toLowerCase()
+      element.name?.trim().toLowerCase() ===
+      name.toString().trim().toLowerCase()
   );
 
   if (isExist) {
-    throw new createError.Conflict("Sub specialty is already exist!");
+    throw new createError.Conflict("Specialty is already exist!");
   }
+
 
   hospital.specialties.push({
     name: name as string,
@@ -494,7 +495,6 @@ export const addSpecialty = async (
     description: description as string,
     phone: phone as string,
     doctors: doctors,
-    sub_specialt: sub_specialt
   });
 
   await hospital.save();
@@ -511,7 +511,7 @@ export const updateSpecialty = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { department_info, description, doctors, name, phone, sub_specialt } = req.body;
+  const { department_info, description, doctors, name, phone } = req.body;
   const { id } = req.params;
   const hospital = await Hospital.findById(id);
   if (!hospital) {
@@ -542,9 +542,7 @@ export const updateSpecialty = async (
     specialty.name = name;
   }
 
-    if (sub_specialt !== undefined) {
-    specialty.sub_specialt = sub_specialt;
-  }
+
   await hospital.save();
 
   return res.status(201).json({
