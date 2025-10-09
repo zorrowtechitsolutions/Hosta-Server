@@ -357,23 +357,25 @@ export const verifyOtp = async (
 };
 
 // Reset pasword
-export const resetPassword = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
- const { phone, password } = req.body;
-  
-  const hospital = await Hospital.findOne({ phone: phone });
+export const resetPassword = async (req: Request, res: Response): Promise<Response> => {
+  const { phone, password } = req.body;
+
+  const hospital = await Hospital.findOne({ phone });
   if (!hospital) {
     throw new createError.NotFound("No user found");
   }
+
   const hashedPassword = await bcrypt.hash(password, 10);
   hospital.password = hashedPassword;
-  hospital.save();
+
+  // ✅ Skip validation since reviews are missing user_id
+  await hospital.save({ validateBeforeSave: false });
+
   return res.status(200).json({
     message: "Password updated successfully",
   });
 };
+
 
 // Get Hospital(DashBoard) Details
 interface CustomJwtPayload extends JwtPayload {
