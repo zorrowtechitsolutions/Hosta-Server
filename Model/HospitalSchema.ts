@@ -192,16 +192,18 @@ const workingHoursClinicSchema = new Schema({
 
 // Booking Schema
 const bookingSchema = new Schema({
-  user_name: { type: String },
-  mobile: { type: String },
-  email: { type: String },
-  specialty: { type: String },
+   userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+   specialty: { type: String },
   doctor_name: { type: String },
   booking_date: { type: Date },
   booking_time: { type: String },
   status: {
     type: String,
-    enum: ["pending", "accepted", "declained"],
+    enum: ["pending", "accepted", "declained", "cancel"],
   },
 });
 
