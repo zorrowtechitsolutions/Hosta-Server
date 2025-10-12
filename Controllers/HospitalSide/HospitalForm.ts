@@ -3,6 +3,7 @@ import createError from "http-errors";
 import bcrypt from "bcrypt";
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import Hospital from "../../Model/HospitalSchema";
+import User from "../../Model/UserSchema";
 import { RegistrationSchema } from "./RegistrationJoiSchema";
 import { v2 as cloudinary } from "cloudinary";
 const twilio = require("twilio");
@@ -705,4 +706,83 @@ export const hospitalDelete = async (
   }
   await Hospital.deleteOne({ _id: id });
   return res.status(200).send("Your account deleted successfully");
+};
+
+
+export const createBooking = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.params; // hospital id
+    const { userId, specialty, doctor_name, booking_date } = req.body;
+
+    // Validate user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Validate hospital
+    const hospital = await Hospital.findById(id);
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    // Create new booking object
+    const newBooking = {
+      userId,
+      specialty,
+      doctor_name,
+      booking_date,
+      status: "pending",
+    };
+
+    // Push into hospital booking array
+    hospital.booking.push(newBooking);
+
+    // Save hospital
+    await hospital.save();
+
+    return res.status(201).json({
+      message: "Booking created successfully",
+      data: hospital.booking[hospital.booking.length - 1], // Return the newly added booking
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+
+export const updateBooking = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { hospitalId, bookingId } = req.params;
+    const { status, booking_date, booking_time } = req.body;
+
+    // Find hospital
+    const hospital = await Hospital.findById(hospitalId);
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    // Find booking inside hospital
+    const booking = hospital.booking.id(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Update fields if provided
+    if (status) booking.status = status;
+    if (booking_date) booking.booking_date = booking_date;
+    if (booking_time) booking.booking_time = booking_time;
+
+    await hospital.save();
+
+    return res.status(200).json({
+      message: "Booking updated successfully",
+      data: booking,
+    });
+  } catch (error) {
+    console.error("Error updating booking:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
 };
