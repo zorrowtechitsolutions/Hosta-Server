@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import Hospital from "../../Model/HospitalSchema";
 import User from "../../Model/UserSchema";
-import { RegistrationSchema } from "./RegistrationJoiSchema";
+import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 const twilio = require("twilio");
 require("dotenv").config();
@@ -786,3 +786,51 @@ export const updateBooking = async (req: Request, res: Response): Promise<Respon
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+
+
+
+export const getBookingsByUserId = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    // Find all hospitals that have at least one booking by this user
+    const hospitals = await Hospital.find({
+      "booking.userId": userId
+    }).lean();
+
+    if (!hospitals || hospitals.length === 0) {
+      return res.status(404).json({ message: "No bookings found for this user" });
+    }
+
+    // Extract only bookings related to that user
+    const userBookings = hospitals.flatMap(hospital =>
+      hospital.booking
+        .filter(b => b.userId.toString() === userId)
+        .map(b => ({
+          hospitalId: hospital._id,
+          hospitalName: hospital.name,
+          hospitalType: hospital.type,
+          doctor_name: b.doctor_name,
+          specialty: b.specialty,
+          booking_date: b.booking_date,
+          booking_time: b.booking_time,
+          status: b.status,
+          bookingId: b._id
+        }))
+    );
+
+    return res.status(200).json({
+      message: "User bookings fetched successfully",
+      data: userBookings,
+    });
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
