@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import Hospital from "../../Model/HospitalSchema";
 import User from "../../Model/UserSchema";
+import notficationModel from "../../Model/NotificationSchema";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 const twilio = require("twilio");
@@ -15,8 +16,6 @@ const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
-
-
 
 // Hospital Registration
 interface WorkingHours {
@@ -30,43 +29,43 @@ interface WorkingHours {
 }
 
 interface ClinicWorkingHours {
-  Monday: { 
-    morning_session: { open: string; close: string };
-    evening_session: { open: string; close: string };
-    isHoliday: boolean;
-    hasBreak: boolean;
-  },
-     Tuesday: { 
-    morning_session: { open: string; close: string };
-    evening_session: { open: string; close: string };
-    isHoliday: boolean;
-    hasBreak: boolean;
-  },
-    Wednesday: { 
-    morning_session: { open: string; close: string };
-    evening_session: { open: string; close: string };
-    isHoliday: boolean;
-    hasBreak: boolean;
-  },
-     Thursday: { 
-    morning_session: { open: string; close: string };
-    evening_session: { open: string; close: string };
-    isHoliday: boolean;
-    hasBreak: boolean;
-  },
-      Friday: { 
+  Monday: {
     morning_session: { open: string; close: string };
     evening_session: { open: string; close: string };
     isHoliday: boolean;
     hasBreak: boolean;
   };
-      Saturday: { 
+  Tuesday: {
     morning_session: { open: string; close: string };
     evening_session: { open: string; close: string };
     isHoliday: boolean;
     hasBreak: boolean;
   };
-  Sunday: { 
+  Wednesday: {
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+  Thursday: {
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+  Friday: {
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+  Saturday: {
+    morning_session: { open: string; close: string };
+    evening_session: { open: string; close: string };
+    isHoliday: boolean;
+    hasBreak: boolean;
+  };
+  Sunday: {
     morning_session: { open: string; close: string };
     evening_session: { open: string; close: string };
     isHoliday: boolean;
@@ -103,10 +102,8 @@ export const HospitalRegistration = async (
     password,
     workingHours,
     workingHoursClinic,
-    hasBreakSchedule = false
+    hasBreakSchedule = false,
   } = req.body;
-
-  
 
   // Validate the request body using Joi - update your Joi schema accordingly
   const data = {
@@ -119,9 +116,9 @@ export const HospitalRegistration = async (
     password,
     workingHours: hasBreakSchedule ? undefined : workingHours,
     workingHoursClinic: hasBreakSchedule ? workingHoursClinic : undefined,
-    hasBreakSchedule
+    hasBreakSchedule,
   };
-  
+
   // const { error } = await RegistrationSchema.validate(data);
   // if (error) {
   //   throw new createError.BadRequest(error?.details[0].message);
@@ -132,8 +129,6 @@ export const HospitalRegistration = async (
   if (existingHospital) {
     throw new createError.Conflict("Email already exists. Please login.");
   }
-
-  
 
   // Hash the password before saving it
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -150,36 +145,42 @@ export const HospitalRegistration = async (
     password: hashedPassword,
   };
 
-  if ( workingHoursClinic) {
+  if (workingHoursClinic) {
     // Use clinic schedule with breaks
-    hospitalData.working_hours_clinic = Object.entries(workingHoursClinic).map(([day, hours]) => ({
-      day,
-      morning_session: hours.isHoliday ? { open: "", close: "" } : hours.morning_session,
-      evening_session: hours.isHoliday ? { open: "", close: "" } : hours.evening_session,
-      is_holiday: hours.isHoliday,
-      has_break: hours.hasBreak
-    }));
+    hospitalData.working_hours_clinic = Object.entries(workingHoursClinic).map(
+      ([day, hours]) => ({
+        day,
+        morning_session: hours.isHoliday
+          ? { open: "", close: "" }
+          : hours.morning_session,
+        evening_session: hours.isHoliday
+          ? { open: "", close: "" }
+          : hours.evening_session,
+        is_holiday: hours.isHoliday,
+        has_break: hours.hasBreak,
+      })
+    );
   } else if (workingHours) {
     // Use regular schedule without breaks
-    hospitalData.working_hours = Object.entries(workingHours).map(([day, hours]) => ({
-      day,
-      opening_time: hours.isHoliday ? "" : hours.open,
-      closing_time: hours.isHoliday ? "" : hours.close,
-      is_holiday: hours.isHoliday,
-    }));
+    hospitalData.working_hours = Object.entries(workingHours).map(
+      ([day, hours]) => ({
+        day,
+        opening_time: hours.isHoliday ? "" : hours.open,
+        closing_time: hours.isHoliday ? "" : hours.close,
+        is_holiday: hours.isHoliday,
+      })
+    );
   }
 
   const newHospital = new Hospital(hospitalData);
-
-  
 
   // Save the hospital to the database
   await newHospital.save();
 
   // Respond with a success message
-  return res.status(201).json({ 
+  return res.status(201).json({
     message: "Hospital registered successfully.",
-    scheduleType: hasBreakSchedule ? "clinic_with_breaks" : "regular"
+    scheduleType: hasBreakSchedule ? "clinic_with_breaks" : "regular",
   });
 };
 
@@ -189,7 +190,7 @@ export const HospitalLogin = async (
   res: Response
 ): Promise<Response> => {
   const { email, password } = req.body;
-  
+
   const hospital = await Hospital.findOne({ email: email });
   if (!hospital) {
     throw new createError.Unauthorized("User not found!");
@@ -234,7 +235,6 @@ export const HospitalLogin = async (
 
 export const login = async (req: Request, res: Response): Promise<Response> => {
   let phone = req.body.phone;
-  
 
   try {
     // Check if customer exists
@@ -358,7 +358,10 @@ export const verifyOtp = async (
 };
 
 // Reset pasword
-export const resetPassword = async (req: Request, res: Response): Promise<Response> => {
+export const resetPassword = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { phone, password } = req.body;
 
   const hospital = await Hospital.findOne({ phone });
@@ -376,7 +379,6 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
     message: "Password updated successfully",
   });
 };
-
 
 // Get Hospital(DashBoard) Details
 interface CustomJwtPayload extends JwtPayload {
@@ -427,7 +429,7 @@ export const updateHospitalDetails = async (
     image,
     currentPassword,
     newPassword,
-     workingHoursClinic
+    workingHoursClinic,
   } = req.body;
   const hospital = await Hospital.findById(id);
   if (!hospital) {
@@ -451,7 +453,8 @@ export const updateHospitalDetails = async (
   hospital.latitude = latitude || hospital.latitude;
   hospital.longitude = longitude || hospital.longitude;
   hospital.working_hours = workingHours || hospital.working_hours;
-  hospital.working_hours_clinic =  workingHoursClinic ||  hospital.working_hours_clinic;
+  hospital.working_hours_clinic =
+    workingHoursClinic || hospital.working_hours_clinic;
 
   hospital.emergencyContact = emergencyContact || hospital.emergencyContact;
   hospital.about = about || hospital.about;
@@ -471,8 +474,7 @@ export const addSpecialty = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  
-  const { department_info, description, doctors, name, phone} = req.body;
+  const { department_info, description, doctors, name, phone } = req.body;
   const { id } = req.params;
 
   const hospital = await Hospital.findById(id);
@@ -490,7 +492,6 @@ export const addSpecialty = async (
   if (isExist) {
     throw new createError.Conflict("Specialty is already exist!");
   }
-
 
   hospital.specialties.push({
     name: name as string,
@@ -544,7 +545,6 @@ export const updateSpecialty = async (
   if (name !== undefined) {
     specialty.name = name;
   }
-
 
   await hospital.save();
 
@@ -708,8 +708,10 @@ export const hospitalDelete = async (
   return res.status(200).send("Your account deleted successfully");
 };
 
-
-export const createBooking = async (req: Request, res: Response): Promise<Response> => {
+export const createBooking = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { id } = req.params; // hospital id
     const { userId, specialty, doctor_name, booking_date } = req.body;
@@ -741,6 +743,11 @@ export const createBooking = async (req: Request, res: Response): Promise<Respon
     // Save hospital
     await hospital.save();
 
+    await notficationModel.create({
+      hospitalId: id,
+      message: `${doctor_name} has created a new booking.`,
+    });
+
     return res.status(201).json({
       message: "Booking created successfully",
       data: hospital.booking[hospital.booking.length - 1], // Return the newly added booking
@@ -751,9 +758,10 @@ export const createBooking = async (req: Request, res: Response): Promise<Respon
   }
 };
 
-
-
-export const updateBooking = async (req: Request, res: Response): Promise<Response> => {
+export const updateBooking = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { hospitalId, bookingId } = req.params;
     const { status, booking_date, booking_time } = req.body;
@@ -777,6 +785,18 @@ export const updateBooking = async (req: Request, res: Response): Promise<Respon
 
     await hospital.save();
 
+    if (status == "cancel") {
+      await notficationModel.create({
+        hospitalId: hospitalId,
+        message: `The booking with  ${booking.doctor_name} has been ${booking.status}.`,
+      });
+    } else {
+      await notficationModel.create({
+        userId: booking.userId,
+        message: `Your booking is ${booking.status}.`,
+      });
+    }
+
     return res.status(200).json({
       message: "Booking updated successfully",
       data: booking,
@@ -787,10 +807,10 @@ export const updateBooking = async (req: Request, res: Response): Promise<Respon
   }
 };
 
-
-
-
-export const getBookingsByUserId = async (req: Request, res: Response): Promise<Response> => {
+export const getBookingsByUserId = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { userId } = req.params;
 
@@ -800,18 +820,20 @@ export const getBookingsByUserId = async (req: Request, res: Response): Promise<
 
     // Find all hospitals that have at least one booking by this user
     const hospitals = await Hospital.find({
-      "booking.userId": userId
+      "booking.userId": userId,
     }).lean();
 
     if (!hospitals || hospitals.length === 0) {
-      return res.status(404).json({ message: "No bookings found for this user" });
+      return res
+        .status(404)
+        .json({ message: "No bookings found for this user" });
     }
 
     // Extract only bookings related to that user
-    const userBookings = hospitals.flatMap(hospital =>
+    const userBookings = hospitals.flatMap((hospital) =>
       hospital.booking
-        .filter(b => b.userId.toString() === userId)
-        .map(b => ({
+        .filter((b) => b.userId.toString() === userId)
+        .map((b) => ({
           hospitalId: hospital._id,
           hospitalName: hospital.name,
           hospitalType: hospital.type,
@@ -820,7 +842,7 @@ export const getBookingsByUserId = async (req: Request, res: Response): Promise<
           booking_date: b.booking_date,
           booking_time: b.booking_time,
           status: b.status,
-          bookingId: b._id
+          bookingId: b._id,
         }))
     );
 
@@ -833,4 +855,3 @@ export const getBookingsByUserId = async (req: Request, res: Response): Promise<
     return res.status(500).json({ message: "Server error", error });
   }
 };
-
