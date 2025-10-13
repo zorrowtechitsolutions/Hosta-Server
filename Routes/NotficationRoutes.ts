@@ -1,18 +1,20 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Controller = require('../Controllers/NotificationSide/notification');
+import { getUserUnread , getHospitalUnread, getUserRead, getHospitalRead, updateHospital, updateUser}  from '../Controllers/NotificationSide/NotificationForm';
+
+
 import { trycatch } from "../Utils/TryCatch";
 
 
 
-router.get('/notification/user/no-read/:id', trycatch(Controller.getUserUnread));
-router.get('/notification/hospital/no-read/:id', trycatch(Controller.getHospitalUnread));
+router.get('/notification/user/no-read/:id', trycatch(getUserUnread));
+router.get('/notification/hospital/no-read/:id', trycatch(getHospitalUnread));
 
-router.get('/notification/user/read/:id', trycatch(Controller.getUserRead ));
-router.get('/notification/hospital/read/:id', trycatch(Controller.getHospitalRead ));
+router.get('/notification/user/read/:id', trycatch(getUserRead ));
+router.get('/notification/hospital/read/:id', trycatch(getHospitalRead ));
 
-router.patch('/notification/user/:id', trycatch(Controller.updateUser));
-router.patch('/notification/hospital/:id', trycatch(Controller.updateHospital));
+router.patch('/notification/user/:id', trycatch(updateUser));
+router.patch('/notification/hospital/:id', trycatch(updateHospital));
 
 
 
