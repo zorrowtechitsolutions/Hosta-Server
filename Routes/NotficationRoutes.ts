@@ -7,14 +7,13 @@ import { trycatch } from "../Utils/TryCatch";
 
 
 
-router.get('/notification/user/no-read/:id', trycatch(getUserUnread));
-router.get('/notification/hospital/no-read/:id', trycatch(getHospitalUnread));
+router.get('/notifications/user/no-read/:id', trycatch(getUserUnread));
+router.get('/notifications/hospital/no-read/:id', trycatch(getHospitalUnread));
+router.get('/notifications/user/read/:id', trycatch(getUserRead));
+router.get('/notifications/hospital/read/:id', trycatch(getHospitalRead));
+router.patch('/notifications/user/:id', trycatch(updateUser));
+router.patch('/notifications/hospital/:id', trycatch(updateHospital));
 
-router.get('/notification/user/read/:id', trycatch(getUserRead ));
-router.get('/notification/hospital/read/:id', trycatch(getHospitalRead ));
-
-router.patch('/notification/user/:id', trycatch(updateUser));
-router.patch('/notification/hospital/:id', trycatch(updateHospital));
 
 
 
