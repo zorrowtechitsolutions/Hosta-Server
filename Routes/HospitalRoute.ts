@@ -16,7 +16,8 @@ import {
   login,
   verifyOtp,
   createBooking,
-  updateBooking
+  updateBooking,
+  getBookingsByUserId
 } from "../Controllers/HospitalSide/HospitalForm";
 import { uploadImage } from "../Middlewares/Multer";
 import Authenticator from "../Middlewares/Authenticator";
@@ -78,5 +79,7 @@ hospitalRoutes.delete("/hospital/:id", Authenticator, trycatch(hospitalDelete));
 
 hospitalRoutes.post("/bookings/:id",  trycatch( createBooking )); 
 hospitalRoutes.put("/bookings/:bookingId/hospital/:hospitalId",  trycatch( updateBooking ));
+hospitalRoutes.get("/bookings/user/:userId", trycatch(getBookingsByUserId));
+
 
 export default hospitalRoutes;
