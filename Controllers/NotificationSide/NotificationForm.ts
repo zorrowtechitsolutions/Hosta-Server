@@ -83,6 +83,29 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
   }
 };
 
+export const updateUserAll = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const result = await Notification.updateMany(
+      { userId: req.params.id },     
+      { $set: { userIsRead: true } }  
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "No notifications found for this user" });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "All user notifications marked as read",
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error updating user notifications:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
 
 export const updateHospital = async (req: Request, res: Response): Promise<Response> => {
   try {
