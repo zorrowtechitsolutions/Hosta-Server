@@ -1,34 +1,83 @@
 import { Request, Response } from "express";
 import Notification from "../../Model/NotificationSchema";
+import { Expo } from "expo-server-sdk";
+const expo = new Expo();
+
+// export const getUserUnread = async (req: Request, res: Response): Promise<Response> => {
+//   try {
+//     const notifications = await Notification.find({
+//       userId: req.params.id,
+//       userIsRead: false,
+//     }).sort({ createdAt: -1 });
+
+//     return res.status(200).json(notifications);
+//   } catch (error) {
+//     console.error("Error fetching user unread notifications:", error);
+//     return res.status(500).json({ message: "Server error", error });
+//   }
+// };
+
+
+// export const getHospitalUnread = async (req: Request, res: Response): Promise<Response> => {
+//   try {
+//     const notifications = await Notification.find({
+//       hospitalId: req.params.id,
+//       hospitalIsRead: false,
+//     }).sort({ createdAt: -1 });
+
+//     return res.status(200).json(notifications);
+//   } catch (error) {
+//     console.error("Error fetching hospital unread notifications:", error);
+//     return res.status(500).json({ message: "Server error", error });
+//   }
+// };
+
 
 export const getUserUnread = async (req: Request, res: Response): Promise<Response> => {
   try {
+    const userId = req.params.id;
+
+    // Fetch all unread notifications
     const notifications = await Notification.find({
-      userId: req.params.id,
+      userId,
       userIsRead: false,
     }).sort({ createdAt: -1 });
 
-    return res.status(200).json(notifications);
+    if (!notifications.length) {
+      return res.status(200).json({ message: "No unread notifications", notifications: [] });
+    }
+
+    // Get Expo push token (you can later fetch this from the user's model)
+    const token = "ExponentPushToken[th0qVbEcw6LD-TFRCuIAaI]";
+
+    if (!Expo.isExpoPushToken(token)) {
+      throw new Error("Invalid Expo push token");
+    }
+
+    // Map all notifications to Expo messages
+    const messages = notifications.map((notif) => ({
+      to: token,
+      sound: "default",
+      title: "New Notification",
+      body: notif.message,
+      data: { notificationId: notif._id, createdAt: notif.createdAt },
+    }));
+
+    // Send notifications
+    const tickets = await expo.sendPushNotificationsAsync(messages);
+
+    return res.status(200).json({
+      success: true,
+      count: notifications.length,
+      notifications,
+      tickets,
+    });
   } catch (error) {
     console.error("Error fetching user unread notifications:", error);
     return res.status(500).json({ message: "Server error", error });
   }
 };
 
-
-export const getHospitalUnread = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const notifications = await Notification.find({
-      hospitalId: req.params.id,
-      hospitalIsRead: false,
-    }).sort({ createdAt: -1 });
-
-    return res.status(200).json(notifications);
-  } catch (error) {
-    console.error("Error fetching hospital unread notifications:", error);
-    return res.status(500).json({ message: "Server error", error });
-  }
-};
 
 
 export const getUserRead = async (req: Request, res: Response): Promise<Response> => {
