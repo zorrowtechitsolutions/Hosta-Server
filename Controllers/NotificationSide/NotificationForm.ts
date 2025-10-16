@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Notification from "../../Model/NotificationSchema";
-import { Expo } from "expo-server-sdk";
-const expo = new Expo();
+
 
 export const getUserUnread = async (req: Request, res: Response): Promise<Response> => {
   try {
