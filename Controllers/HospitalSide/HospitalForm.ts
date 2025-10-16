@@ -848,18 +848,19 @@ export const updateBooking = async (
         message: `Your booking is ${booking.status}.`,
       });
     }
-
+     
+    const token = "ExponentPushToken[th0qVbEcw6LD-TFRCuIAaI]"
 
         if (!Expo.isExpoPushToken(token)) {
-    throw new Error("Invalid push token", 400);
+          return res.status(400).json({ message: "Invalid push token"});
   }
 
   const message = {
-    to: " ExponentPushToken[th0qVbEcw6LD-TFRCuIAaI]",
+    to: token,
     sound: "default",
     title: "Booking message",
     body: `Your booking is ${booking.status}.`,
-    data: metadata || {},
+    data:  {},
   };
 
   const tickets = await expo.sendPushNotificationsAsync([message]);
@@ -874,6 +875,7 @@ export const updateBooking = async (
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 export const getBookingsByUserId = async (
   req: Request,
