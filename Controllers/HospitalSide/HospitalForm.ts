@@ -7,6 +7,8 @@ import User from "../../Model/UserSchema";
 import notficationModel from "../../Model/NotificationSchema";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
+import { Expo } from "expo-server-sdk";
+const expo = new Expo();
 const twilio = require("twilio");
 require("dotenv").config();
 
@@ -758,6 +760,56 @@ export const createBooking = async (
   }
 };
 
+// export const updateBooking = async (
+//   req: Request,
+//   res: Response
+// ): Promise<Response> => {
+//   try {
+//     const { hospitalId, bookingId } = req.params;
+//     const { status, booking_date, booking_time } = req.body;
+
+//     // Find hospital
+//     const hospital = await Hospital.findById(hospitalId);
+//     if (!hospital) {
+//       return res.status(404).json({ message: "Hospital not found" });
+//     }
+
+//     // Find booking inside hospital
+//     const booking = hospital.booking.id(bookingId);
+//     if (!booking) {
+//       return res.status(404).json({ message: "Booking not found" });
+//     }
+
+//     // Update fields if provided
+//     if (status) booking.status = status;
+//     if (booking_date) booking.booking_date = booking_date;
+//     if (booking_time) booking.booking_time = booking_time;
+
+//     await hospital.save();
+
+//     if (status == "cancel") {
+//       await notficationModel.create({
+//         hospitalId: hospitalId,
+//         message: `The booking with  ${booking.doctor_name} has been ${booking.status}.`,
+//       });
+//     } else {
+//       await notficationModel.create({
+//         userId: booking.userId,
+//         message: `Your booking is ${booking.status}.`,
+//       });
+//     }
+
+//     return res.status(200).json({
+//       message: "Booking updated successfully",
+//       data: booking,
+//     });
+//   } catch (error) {
+//     console.error("Error updating booking:", error);
+//     return res.status(500).json({ message: "Server error", error });
+//   }
+// };
+
+
 export const updateBooking = async (
   req: Request,
   res: Response
@@ -797,9 +849,25 @@ export const updateBooking = async (
       });
     }
 
+
+        if (!Expo.isExpoPushToken(token)) {
+    throw new Error("Invalid push token", 400);
+  }
+
+  const message = {
+    to: " ExponentPushToken[th0qVbEcw6LD-TFRCuIAaI]",
+    sound: "default",
+    title: "Booking message",
+    body: `Your booking is ${booking.status}.`,
+    data: metadata || {},
+  };
+
+  const tickets = await expo.sendPushNotificationsAsync([message]);
+
     return res.status(200).json({
       message: "Booking updated successfully",
       data: booking,
+      tickets
     });
   } catch (error) {
     console.error("Error updating booking:", error);
