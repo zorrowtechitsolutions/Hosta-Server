@@ -489,3 +489,27 @@ export const deleteReview = async (
     data: updatedHospital,
   });
 };
+
+
+export const saveExpoToken = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { expoPushToken } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { expoPushToken },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ message: "Expo token updated", user });
+  } catch (error) {
+    console.error("Error saving expo token:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
