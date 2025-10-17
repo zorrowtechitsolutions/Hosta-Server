@@ -36,7 +36,7 @@ userRoutes.delete(
 );
 
 userRoutes.post("/users/otp", trycatch(verifyOtp));
-userRoutes.post("/users/:userId/token", trycatch(saveExpoToken));
+userRoutes.post("/users/:id/token", trycatch(saveExpoToken));
 
 
 
