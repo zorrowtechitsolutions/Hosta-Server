@@ -831,52 +831,58 @@ export const updateBooking = async (
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // Update fields if provided
+    // Update booking fields
     if (status) booking.status = status;
     if (booking_date) booking.booking_date = booking_date;
     if (booking_time) booking.booking_time = booking_time;
 
     await hospital.save();
 
-    if (status == "cancel") {
-      await notficationModel.create({
-        hospitalId: hospitalId,
-        message: `The booking with  ${booking.doctor_name} has been ${booking.status}.`,
-      });
-    } else {
-      await notficationModel.create({
-        userId: booking.userId,
-        message: `Your booking is ${booking.status}.`,
-      });
+    // Find the user of this booking
+    const user = await User.findById(booking.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-     
-    const token = "ExponentPushToken[th0qVbEcw6LD-TFRCuIAaI]"
 
-        if (!Expo.isExpoPushToken(token)) {
-          return res.status(400).json({ message: "Invalid push token"});
-  }
+    // Create a notification record in DB
+    await notficationModel.create({
+      userId: booking.userId,
+      message: `Your booking with ${booking.doctor_name} is now ${booking.status}.`,
+    });
 
-  const message = {
-    to: token,
-    sound: "default",
-    title: "Booking message",
-    body: `Your booking is ${booking.status}.`,
-    data:  {},
-  };
+    // Check if user has Expo push token
+    const pushToken = user.expoPushToken;
+    if (!pushToken || !Expo.isExpoPushToken(pushToken)) {
+      console.warn("Invalid or missing Expo token for user", user._id);
+      return res
+        .status(200)
+        .json({ message: "Booking updated but push token missing", booking });
+    }
 
-  const tickets = await expo.sendPushNotificationsAsync([message]);
+    // Prepare push notification message
+    const messages = [
+      {
+        to: pushToken,
+        sound: "default",
+        title: "Booking Update",
+        body: `Your booking is ${booking.status}`,
+        data: { bookingId, status },
+      },
+    ];
+
+    // Send notification fast and reliably
+    const tickets = await expo.sendPushNotificationsAsync(messages);
 
     return res.status(200).json({
-      message: "Booking updated successfully",
-      data: booking,
-      tickets
+      message: "Booking updated and notification sent",
+      booking,
+      tickets,
     });
   } catch (error) {
     console.error("Error updating booking:", error);
     return res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 
 export const getBookingsByUserId = async (
