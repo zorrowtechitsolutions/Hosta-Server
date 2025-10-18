@@ -128,6 +128,7 @@ const doctorSchema = new Schema({
       ],
     },
   ],
+    bookingOpen: { type: Boolean, default: true}
 });
 
 // Speciality Schema
@@ -240,7 +241,6 @@ const hospitalSchema = new Schema({
   specialties: [specialtySchema],
   booking: [bookingSchema],
   ads: [adSchema],
-  bookingOpen: { type: Boolean, default: true},
 });
 
 // Create the model
