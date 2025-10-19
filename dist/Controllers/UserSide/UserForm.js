@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReview = exports.editReview = exports.postReview = exports.getHospitals = exports.resetPassword = exports.aUserData = exports.userData = exports.verifyOtp = exports.login = exports.userLogin = exports.userRegister = void 0;
+exports.saveExpoToken = exports.deleteReview = exports.editReview = exports.postReview = exports.getHospitals = exports.resetPassword = exports.aUserData = exports.userData = exports.verifyOtp = exports.login = exports.userLogin = exports.userRegister = void 0;
 const joi_1 = __importDefault(require("joi"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -366,4 +366,20 @@ const deleteReview = async (req, res) => {
     });
 };
 exports.deleteReview = deleteReview;
+const saveExpoToken = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { expoPushToken } = req.body;
+        const user = await UserSchema_1.default.findByIdAndUpdate(id, { expoPushToken }, { new: true });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.status(200).json({ message: "Expo token updated", user });
+    }
+    catch (error) {
+        console.error("Error saving expo token:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+exports.saveExpoToken = saveExpoToken;
 //# sourceMappingURL=UserForm.js.map

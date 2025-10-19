@@ -30,6 +30,7 @@ const userSchema = new Schema({
         match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
     },
     picture: { imageUrl: { type: String }, public_id: { type: String } },
+    expoPushToken: { type: String },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("User", userSchema);
 //# sourceMappingURL=UserSchema.js.map

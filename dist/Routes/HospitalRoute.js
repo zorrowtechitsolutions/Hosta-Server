@@ -24,5 +24,8 @@ hospitalRoutes.post("/hospital/doctor/:id", Authenticator_1.default, (0, TryCatc
 hospitalRoutes.put("/hospital/doctor/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.updateDoctor));
 hospitalRoutes.delete("/hospital/doctor/:hospital_id/:doctor_id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.deleteDoctor));
 hospitalRoutes.delete("/hospital/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.hospitalDelete));
+hospitalRoutes.post("/bookings/:id", (0, TryCatch_1.trycatch)(HospitalForm_1.createBooking));
+hospitalRoutes.put("/bookings/:bookingId/hospital/:hospitalId", (0, TryCatch_1.trycatch)(HospitalForm_1.updateBooking));
+hospitalRoutes.get("/bookings/user/:userId", (0, TryCatch_1.trycatch)(HospitalForm_1.getBookingsByUserId));
 exports.default = hospitalRoutes;
 //# sourceMappingURL=HospitalRoute.js.map
