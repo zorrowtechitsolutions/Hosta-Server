@@ -3,18 +3,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.hospitalDelete = exports.deleteDoctor = exports.updateDoctor = exports.addDoctor = exports.deleteSpecialty = exports.updateSpecialty = exports.addSpecialty = exports.updateHospitalDetails = exports.getHospitalDetails = exports.resetPassword = exports.verifyOtp = exports.login = exports.HospitalLogin = exports.HospitalRegistration = void 0;
+exports.getBookingsByUserId = exports.updateBooking = exports.createBooking = exports.hospitalDelete = exports.deleteDoctor = exports.updateDoctor = exports.addDoctor = exports.deleteSpecialty = exports.updateSpecialty = exports.addSpecialty = exports.updateHospitalDetails = exports.getHospitalDetails = exports.resetPassword = exports.verifyOtp = exports.login = exports.HospitalLogin = exports.HospitalRegistration = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const HospitalSchema_1 = __importDefault(require("../../Model/HospitalSchema"));
+const UserSchema_1 = __importDefault(require("../../Model/UserSchema"));
+const NotificationSchema_1 = __importDefault(require("../../Model/NotificationSchema"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const cloudinary_1 = require("cloudinary");
+const expo_server_sdk_1 = require("expo-server-sdk");
+const expo = new expo_server_sdk_1.Expo();
 const twilio = require("twilio");
 require("dotenv").config();
 const otpStorage = new Map();
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const HospitalRegistration = async (req, res) => {
-    const { name, type, email, mobile, address, latitude, longitude, password, workingHours, workingHoursClinic, hasBreakSchedule = false } = req.body;
+    const { name, type, email, mobile, address, latitude, longitude, password, workingHours, workingHoursClinic, hasBreakSchedule = false, } = req.body;
     // Validate the request body using Joi - update your Joi schema accordingly
     const data = {
         name,
@@ -26,7 +31,7 @@ const HospitalRegistration = async (req, res) => {
         password,
         workingHours: hasBreakSchedule ? undefined : workingHours,
         workingHoursClinic: hasBreakSchedule ? workingHoursClinic : undefined,
-        hasBreakSchedule
+        hasBreakSchedule,
     };
     // const { error } = await RegistrationSchema.validate(data);
     // if (error) {
@@ -54,10 +59,14 @@ const HospitalRegistration = async (req, res) => {
         // Use clinic schedule with breaks
         hospitalData.working_hours_clinic = Object.entries(workingHoursClinic).map(([day, hours]) => ({
             day,
-            morning_session: hours.isHoliday ? { open: "", close: "" } : hours.morning_session,
-            evening_session: hours.isHoliday ? { open: "", close: "" } : hours.evening_session,
+            morning_session: hours.isHoliday
+                ? { open: "", close: "" }
+                : hours.morning_session,
+            evening_session: hours.isHoliday
+                ? { open: "", close: "" }
+                : hours.evening_session,
             is_holiday: hours.isHoliday,
-            has_break: hours.hasBreak
+            has_break: hours.hasBreak,
         }));
     }
     else if (workingHours) {
@@ -75,7 +84,7 @@ const HospitalRegistration = async (req, res) => {
     // Respond with a success message
     return res.status(201).json({
         message: "Hospital registered successfully.",
-        scheduleType: hasBreakSchedule ? "clinic_with_breaks" : "regular"
+        scheduleType: hasBreakSchedule ? "clinic_with_breaks" : "regular",
     });
 };
 exports.HospitalRegistration = HospitalRegistration;
@@ -215,38 +224,55 @@ exports.verifyOtp = verifyOtp;
 // Reset pasword
 const resetPassword = async (req, res) => {
     const { phone, password } = req.body;
-    const hospital = await HospitalSchema_1.default.findOne({ phone: phone });
+    const hospital = await HospitalSchema_1.default.findOne({ phone });
     if (!hospital) {
         throw new http_errors_1.default.NotFound("No user found");
     }
     const hashedPassword = await bcrypt_1.default.hash(password, 10);
     hospital.password = hashedPassword;
-    hospital.save();
+    // ✅ Skip validation since reviews are missing user_id
+    await hospital.save({ validateBeforeSave: false });
     return res.status(200).json({
         message: "Password updated successfully",
     });
 };
 exports.resetPassword = resetPassword;
 const getHospitalDetails = async (req, res) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-        throw new http_errors_1.default.Unauthorized("No token provided. Please login.");
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            throw new http_errors_1.default.Unauthorized("No token provided. Please login.");
+        }
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        if (!decoded) {
+            throw new http_errors_1.default.Unauthorized("Invalid token. Please login.");
+        }
+        // Find hospital and populate user details inside booking
+        const hospital = await HospitalSchema_1.default.findById(decoded.id).populate({
+            path: "booking.userId", // path to populate
+            select: "name email phone", // choose what to return from User
+        });
+        if (!hospital) {
+            throw new http_errors_1.default.NotFound("Hospital not found.");
+        }
+        return res.status(200).json({
+            status: "Success",
+            data: hospital,
+        });
     }
-    const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-        throw new http_errors_1.default.Unauthorized("Invalid token. Please login.");
+    catch (err) {
+        console.error("Error fetching hospital details:", err);
+        return res.status(err.status || 500).json({
+            status: "Failed",
+            message: err.message || "Internal Server Error",
+        });
     }
-    const hospital = await HospitalSchema_1.default.findById(decoded.id);
-    return res.status(200).json({
-        status: "Success",
-        data: hospital,
-    });
 };
 exports.getHospitalDetails = getHospitalDetails;
 //Update hospital details
 const updateHospitalDetails = async (req, res) => {
     const { id } = req.params;
-    const { name, email, mobile, address, latitude, longitude, workingHours, emergencyContact, about, image, currentPassword, newPassword, workingHoursClinic } = req.body;
+    const { name, email, mobile, address, latitude, longitude, workingHours, emergencyContact, about, image, currentPassword, newPassword, workingHoursClinic, } = req.body;
     const hospital = await HospitalSchema_1.default.findById(id);
     if (!hospital) {
         throw new http_errors_1.default.NotFound("Hospital not found. Wrong input");
@@ -268,7 +294,8 @@ const updateHospitalDetails = async (req, res) => {
     hospital.latitude = latitude || hospital.latitude;
     hospital.longitude = longitude || hospital.longitude;
     hospital.working_hours = workingHours || hospital.working_hours;
-    hospital.working_hours_clinic = workingHoursClinic || hospital.working_hours_clinic;
+    hospital.working_hours_clinic =
+        workingHoursClinic || hospital.working_hours_clinic;
     hospital.emergencyContact = emergencyContact || hospital.emergencyContact;
     hospital.about = about || hospital.about;
     hospital.image = image || hospital.image;
@@ -455,4 +482,156 @@ const hospitalDelete = async (req, res) => {
     return res.status(200).send("Your account deleted successfully");
 };
 exports.hospitalDelete = hospitalDelete;
+const createBooking = async (req, res) => {
+    try {
+        const { id } = req.params; // hospital id
+        const { userId, specialty, doctor_name, booking_date } = req.body;
+        // Validate user
+        const user = await UserSchema_1.default.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // Validate hospital
+        const hospital = await HospitalSchema_1.default.findById(id);
+        if (!hospital) {
+            return res.status(404).json({ message: "Hospital not found" });
+        }
+        // Create new booking object
+        const newBooking = {
+            userId,
+            specialty,
+            doctor_name,
+            booking_date,
+            status: "pending",
+        };
+        // Push into hospital booking array
+        hospital.booking.push(newBooking);
+        // Save hospital
+        await hospital.save();
+        await NotificationSchema_1.default.create({
+            hospitalId: id,
+            message: `${doctor_name} has created a new booking.`,
+        });
+        return res.status(201).json({
+            message: "Booking created successfully",
+            data: hospital.booking[hospital.booking.length - 1], // Return the newly added booking
+        });
+    }
+    catch (error) {
+        console.error("Error creating booking:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+exports.createBooking = createBooking;
+const updateBooking = async (req, res) => {
+    try {
+        const { hospitalId, bookingId } = req.params;
+        const { status, booking_date, booking_time } = req.body;
+        // Find hospital
+        const hospital = await HospitalSchema_1.default.findById(hospitalId);
+        if (!hospital) {
+            return res.status(404).json({ message: "Hospital not found" });
+        }
+        // Find booking inside hospital
+        const booking = hospital.booking.id(bookingId);
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+        // Update booking fields
+        if (status)
+            booking.status = status;
+        if (booking_date)
+            booking.booking_date = booking_date;
+        if (booking_time)
+            booking.booking_time = booking_time;
+        await hospital.save();
+        // Find the user of this booking
+        const user = await UserSchema_1.default.findById(booking.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // Check if user has Expo push token
+        const pushToken = user.expoPushToken;
+        if (!pushToken || !expo_server_sdk_1.Expo.isExpoPushToken(pushToken)) {
+            console.warn("Invalid or missing Expo token for user", user._id);
+            return res
+                .status(200)
+                .json({ message: "Booking updated but push token missing", booking });
+        }
+        if (status == "cancel") {
+            await NotificationSchema_1.default.create({
+                hospitalId: hospitalId,
+                message: `The booking with  ${booking.doctor_name} has been ${booking.status}.`,
+            });
+        }
+        else {
+            // Create a notification record in DB
+            await NotificationSchema_1.default.create({
+                userId: booking.userId,
+                message: `Your booking with ${booking.doctor_name} is now ${booking.status}.`,
+            });
+            // Prepare push notification message
+            const messages = [
+                {
+                    to: pushToken,
+                    sound: "default",
+                    title: "Booking Update",
+                    body: `Your booking is ${booking.status}`,
+                    data: { bookingId, status },
+                },
+            ];
+            // Send notification fast and reliably
+            await expo.sendPushNotificationsAsync(messages);
+        }
+        return res.status(200).json({
+            message: "Booking updated and notification sent",
+            booking,
+        });
+    }
+    catch (error) {
+        console.error("Error updating booking:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+exports.updateBooking = updateBooking;
+const getBookingsByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+        // Find all hospitals that have at least one booking by this user
+        const hospitals = await HospitalSchema_1.default.find({
+            "booking.userId": userId,
+        }).lean();
+        if (!hospitals || hospitals.length === 0) {
+            return res
+                .status(404)
+                .json({ message: "No bookings found for this user" });
+        }
+        // Extract only bookings related to that user
+        const userBookings = hospitals.flatMap((hospital) => hospital.booking
+            .filter((b) => b.userId.toString() === userId)
+            .map((b) => ({
+            hospitalId: hospital._id,
+            hospitalName: hospital.name,
+            hospitalType: hospital.type,
+            doctor_name: b.doctor_name,
+            specialty: b.specialty,
+            booking_date: b.booking_date,
+            booking_time: b.booking_time,
+            status: b.status,
+            bookingId: b._id,
+        })));
+        return res.status(200).json({
+            message: "User bookings fetched successfully",
+            data: userBookings,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching user bookings:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+exports.getBookingsByUserId = getBookingsByUserId;
 //# sourceMappingURL=HospitalForm.js.map

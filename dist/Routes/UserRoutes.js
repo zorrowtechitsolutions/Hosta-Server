@@ -21,5 +21,6 @@ userRoutes.post("/reviews/:id", (0, TryCatch_1.trycatch)(UserForm_1.postReview))
 userRoutes.put("/reviews/:hospital_id/:reviewId", (0, TryCatch_1.trycatch)(UserForm_1.editReview));
 userRoutes.delete("/reviews/:hospital_id/:reviewId", (0, TryCatch_1.trycatch)(UserForm_1.deleteReview));
 userRoutes.post("/users/otp", (0, TryCatch_1.trycatch)(UserForm_1.verifyOtp));
+userRoutes.post("/users/:id/token", (0, TryCatch_1.trycatch)(UserForm_1.saveExpoToken));
 exports.default = userRoutes;
 //# sourceMappingURL=UserRoutes.js.map
