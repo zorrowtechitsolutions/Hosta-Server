@@ -120,11 +120,7 @@ export const HospitalRegistration = async (
     workingHoursClinic: hasBreakSchedule ? workingHoursClinic : undefined,
     hasBreakSchedule
   };
-  
-  // const { error } = await RegistrationSchema.validate(data);
-  // if (error) {
-  //   throw new createError.BadRequest(error?.details[0].message);
-  // }
+
 
   // Check if the hospital already exists with the same email
   const existingHospital = await Hospital.findOne({ email });
