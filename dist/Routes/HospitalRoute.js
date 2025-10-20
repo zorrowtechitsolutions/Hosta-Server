@@ -22,6 +22,7 @@ hospitalRoutes.delete("/hospital/specialty/:id", Authenticator_1.default, (0, Tr
 hospitalRoutes.post("/hospital/profileImage/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(Multer_1.uploadImage));
 hospitalRoutes.post("/hospital/doctor/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.addDoctor));
 hospitalRoutes.put("/hospital/doctor/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.updateDoctor));
+hospitalRoutes.put("/hospital/:hospitalId/specialty/:specialtyId/doctor/:doctorId/booking-status", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.updateDoctorBookingStatus));
 hospitalRoutes.delete("/hospital/doctor/:hospital_id/:doctor_id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.deleteDoctor));
 hospitalRoutes.delete("/hospital/:id", Authenticator_1.default, (0, TryCatch_1.trycatch)(HospitalForm_1.hospitalDelete));
 hospitalRoutes.post("/bookings/:id", (0, TryCatch_1.trycatch)(HospitalForm_1.createBooking));
