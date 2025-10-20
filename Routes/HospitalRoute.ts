@@ -70,6 +70,7 @@ hospitalRoutes.put(
   Authenticator,
   trycatch(updateDoctor)
 );
+hospitalRoutes.put()
 hospitalRoutes.delete(
   "/hospital/doctor/:hospital_id/:doctor_id",
   Authenticator,
