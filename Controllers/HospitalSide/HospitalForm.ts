@@ -904,3 +904,49 @@ export const getBookingsByUserId = async (
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+export const updateDoctorBookingStatus = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { hospitalId, specialtyId, doctorId } = req.params;
+    const { bookingOpen } = req.body;
+
+    // Find hospital
+    const hospital = await Hospital.findById(hospitalId);
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    // Find specialty
+    const specialty = hospital.specialties.id(specialtyId);
+    if (!specialty) {
+      return res.status(404).json({ message: "Specialty not found" });
+    }
+
+    // Find doctor
+    const doctor = specialty.doctors.id(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Update booking status
+    doctor.bookingOpen = bookingOpen;
+
+    await hospital.save();
+
+    return res.status(200).json({
+      message: `Booking ${bookingOpen ? 'opened' : 'closed'} for Dr. ${doctor.name}`,
+      doctor: {
+        _id: doctor._id,
+        name: doctor.name,
+        specialty: specialty.name,
+        bookingOpen: doctor.bookingOpen
+      }
+    });
+  } catch (error) {
+    console.error("Error updating doctor booking status:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
