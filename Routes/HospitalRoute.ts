@@ -17,7 +17,8 @@ import {
   verifyOtp,
   createBooking,
   updateBooking,
-  getBookingsByUserId
+  getBookingsByUserId,
+  updateDoctorBookingStatus,
 } from "../Controllers/HospitalSide/HospitalForm";
 import { uploadImage } from "../Middlewares/Multer";
 import Authenticator from "../Middlewares/Authenticator";
@@ -29,11 +30,7 @@ hospitalRoutes.post("/hospital/login", trycatch(login));
 hospitalRoutes.post("/hospital/otp", trycatch(verifyOtp));
 hospitalRoutes.post("/hospital/login/mail", trycatch(HospitalLogin));
 
-
-hospitalRoutes.post(
-  "/hospital/password",
-  trycatch(resetPassword)
-);
+hospitalRoutes.post("/hospital/password", trycatch(resetPassword));
 hospitalRoutes.get(
   "/hospital/details",
   Authenticator,
@@ -70,7 +67,11 @@ hospitalRoutes.put(
   Authenticator,
   trycatch(updateDoctor)
 );
-hospitalRoutes.put()
+hospitalRoutes.put(
+  "/hospital/:hospitalId/specialty/:specialtyId/doctor/:doctorId/booking-status",
+  Authenticator,
+  trycatch(updateDoctorBookingStatus)
+);
 hospitalRoutes.delete(
   "/hospital/doctor/:hospital_id/:doctor_id",
   Authenticator,
@@ -78,9 +79,11 @@ hospitalRoutes.delete(
 );
 hospitalRoutes.delete("/hospital/:id", Authenticator, trycatch(hospitalDelete));
 
-hospitalRoutes.post("/bookings/:id",  trycatch( createBooking )); 
-hospitalRoutes.put("/bookings/:bookingId/hospital/:hospitalId",  trycatch( updateBooking ));
+hospitalRoutes.post("/bookings/:id", trycatch(createBooking));
+hospitalRoutes.put(
+  "/bookings/:bookingId/hospital/:hospitalId",
+  trycatch(updateBooking)
+);
 hospitalRoutes.get("/bookings/user/:userId", trycatch(getBookingsByUserId));
-
 
 export default hospitalRoutes;

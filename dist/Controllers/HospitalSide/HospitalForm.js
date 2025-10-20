@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBookingsByUserId = exports.updateBooking = exports.createBooking = exports.hospitalDelete = exports.deleteDoctor = exports.updateDoctor = exports.addDoctor = exports.deleteSpecialty = exports.updateSpecialty = exports.addSpecialty = exports.updateHospitalDetails = exports.getHospitalDetails = exports.resetPassword = exports.verifyOtp = exports.login = exports.HospitalLogin = exports.HospitalRegistration = void 0;
+exports.updateDoctorBookingStatus = exports.getBookingsByUserId = exports.updateBooking = exports.createBooking = exports.hospitalDelete = exports.deleteDoctor = exports.updateDoctor = exports.addDoctor = exports.deleteSpecialty = exports.updateSpecialty = exports.addSpecialty = exports.updateHospitalDetails = exports.getHospitalDetails = exports.resetPassword = exports.verifyOtp = exports.login = exports.HospitalLogin = exports.HospitalRegistration = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -634,4 +634,42 @@ const getBookingsByUserId = async (req, res) => {
     }
 };
 exports.getBookingsByUserId = getBookingsByUserId;
+const updateDoctorBookingStatus = async (req, res) => {
+    try {
+        const { hospitalId, specialtyId, doctorId } = req.params;
+        const { bookingOpen } = req.body;
+        // Find hospital
+        const hospital = await HospitalSchema_1.default.findById(hospitalId);
+        if (!hospital) {
+            return res.status(404).json({ message: "Hospital not found" });
+        }
+        // Find specialty
+        const specialty = hospital.specialties.id(specialtyId);
+        if (!specialty) {
+            return res.status(404).json({ message: "Specialty not found" });
+        }
+        // Find doctor
+        const doctor = specialty.doctors.id(doctorId);
+        if (!doctor) {
+            return res.status(404).json({ message: "Doctor not found" });
+        }
+        // Update booking status
+        doctor.bookingOpen = bookingOpen;
+        await hospital.save();
+        return res.status(200).json({
+            message: `Booking ${bookingOpen ? 'opened' : 'closed'} for Dr. ${doctor.name}`,
+            doctor: {
+                _id: doctor._id,
+                name: doctor.name,
+                specialty: specialty.name,
+                bookingOpen: doctor.bookingOpen
+            }
+        });
+    }
+    catch (error) {
+        console.error("Error updating doctor booking status:", error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+exports.updateDoctorBookingStatus = updateDoctorBookingStatus;
 //# sourceMappingURL=HospitalForm.js.map
