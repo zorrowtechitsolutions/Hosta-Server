@@ -733,7 +733,8 @@ export const createBooking = async (
 ): Promise<Response> => {
   try {
     const { id } = req.params; // hospital id
-    const { userId, specialty, doctor_name, booking_date } = req.body;
+        const { userId, specialty, doctor_name, booking_date,  patient_name ,  patient_phone , patient_place,  patient_dob } = req.body;
+
 
     // Validate user
     const user = await User.findById(userId);
@@ -754,6 +755,7 @@ export const createBooking = async (
       doctor_name,
       booking_date,
       status: "pending",
+            patient_name ,  patient_phone , patient_place,  patient_dob,
     };
 
     // Push into hospital booking array
