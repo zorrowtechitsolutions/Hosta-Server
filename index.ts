@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./Config/.env" });
-// import cron from "node-cron";
+
 import session from "express-session";
 import passport from "passport";
 import "./Config/passport"; 
@@ -19,13 +19,18 @@ import MedicineRemainderRoutes from "./Routes/MedicineRemainderRoutes";
 import LabRoutes from "./Routes/LabRoutes";
 import CarouselRouter from "./Routes/CarouselRoutes";
 import notificationRouter from "./Routes/NotficationRoutes";
+import { initSocket } from "./sockets/socket";
 
-// import {
-//   // checkMissedDoses,
-//   checkAndRefillMedicines,
-// } from "./Controllers/MedicineRemainderSide/MedicineRemainderForm";
+
+// ✅ Correct import
+import http from "http";
 
 const app = express();
+
+// ✅ Create HTTP server for Socket.IO
+const server = http.createServer(app);
+
+initSocket(server);
 
 app.use(
   cors({
@@ -36,43 +41,11 @@ app.use(
       process.env.AdminSide_URL as string,
       "http://127.0.0.1:5500",
       "https://hosta-hospitals.vercel.app",
-      "http://localhost:5173"
+      "http://localhost:5173",
     ],
     credentials: true,
   })
 );
-
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       // Check if the origin is in the allowed list
-//       const allowedOrigins = [
-//         process.env.UserSide_URL,
-//         process.env.AmbulanceSide_URL,
-//         process.env.HospitalSide_URL,
-//       ];
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true,
-//   })
-// );
-
-// app.use(
-//   cors({
-//     origin: "*", // Allow all origins
-//     credentials: true, // Allow credentials
-//   })
-// );
-
-// Schedule the job to run every 1 minute
-// cron.schedule("* * * * *", async () => {
-//   await checkMissedDoses();
-//   await checkAndRefillMedicines();
-// });
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -89,10 +62,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use("/auth", authRoutes); // route prefix for auth
+app.use("/auth", authRoutes);
 
 app.get("/", (req, res) => {
-  // res.send(`<a href="/auth/google">Login with Google</a>`);
   res.redirect("/auth/google");
 });
 
@@ -100,9 +72,6 @@ app.get("/profile", (req, res) => {
   res.send(`<pre>${JSON.stringify(req.user, null, 2)}</pre>`);
 });
 
-
-
-// Fix route paths with leading '/'
 app.use("/api", userRoutes);
 app.use("/api", commenRoutes);
 app.use("/api", hospitalRoutes);
@@ -113,13 +82,13 @@ app.use("/api", LabRoutes);
 app.use("/api", CarouselRouter);
 app.use("/api", notificationRouter);
 
-
 connectToDb();
-
 app.use(errorHandler);
 
-app.listen(process.env.Port, () => {
-  console.log(`App is running  http://localhost:${process.env.Port}`);
+// ✅ Listen using `server` instead of `app`
+const PORT = process.env.Port || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 export default app;
