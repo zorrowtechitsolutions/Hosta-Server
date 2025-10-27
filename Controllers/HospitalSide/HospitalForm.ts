@@ -8,6 +8,8 @@ import notficationModel from "../../Model/NotificationSchema";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 import { Expo } from "expo-server-sdk";
+import { getIO } from "../../sockets/socket";
+
 const expo = new Expo();
 const twilio = require("twilio");
 require("dotenv").config();
@@ -733,8 +735,7 @@ export const createBooking = async (
 ): Promise<Response> => {
   try {
     const { id } = req.params; // hospital id
-        const { userId, specialty, doctor_name, booking_date,  patient_name ,  patient_phone , patient_place,  patient_dob } = req.body;
-
+    const { userId, specialty, doctor_name, booking_date,  patient_name ,  patient_phone , patient_place,  patient_dob } = req.body;
 
     // Validate user
     const user = await User.findById(userId);
@@ -755,8 +756,10 @@ export const createBooking = async (
       doctor_name,
       booking_date,
       status: "pending",
-            patient_name ,  patient_phone , patient_place,  patient_dob,
+      patient_name ,  patient_phone , patient_place,  patient_dob
     };
+
+
 
     // Push into hospital booking array
     hospital.booking.push(newBooking);
@@ -769,15 +772,27 @@ export const createBooking = async (
       message: `${doctor_name} has created a new booking.`,
     });
 
+    
+    
+ const io = getIO();
+    io.emit("pushNotification", {
+      hospitalId: id,
+      message: `New booking by ${doctor_name}`,
+    });
+
+       
+  
+
     return res.status(201).json({
       message: "Booking created successfully",
-      data: hospital.booking[hospital.booking.length - 1], // Return the newly added booking
+      data: hospital.booking[hospital.booking.length - 1], 
     });
   } catch (error) {
     console.error("Error creating booking:", error);
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 export const updateBooking = async (
   req: Request,
