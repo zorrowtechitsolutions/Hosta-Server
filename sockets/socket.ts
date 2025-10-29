@@ -18,7 +18,7 @@ export const initSocket = (server: http.Server) => {
     //   "https://hosta-hospitals.vercel.app",
     //   "http://localhost:5173",
     // ],
-      origin: {"*"}
+      origin: {"*"},
       methods: ["GET", "POST"],
     },
   });
