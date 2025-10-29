@@ -56,12 +56,11 @@ export const initSocket = (server: http.Server) => {
   io = new Server(server, {
     cors: {
       origin: [
+        "https://hosta-hospitals.vercel.app",
         process.env.UserSide_URL as string,
         process.env.AmbulanceSide_URL as string,
         process.env.HospitalSide_URL as string,
         process.env.AdminSide_URL as string,
-        "https://hosta-hospitals.vercel.app",
-
         "http://localhost:5173",
       ],
       credentials: true,
