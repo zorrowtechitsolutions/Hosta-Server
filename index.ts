@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config({ path: "./Config/.env" });
+// dotenv.config({ path: "./Config/.env" });
+dotenv.config();
 
 import session from "express-session";
 import passport from "passport";
