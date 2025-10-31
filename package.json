@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+   "dev": "ts-node-dev --respawn --transpile-only index.ts",
     "build": "npx tsc",
     "start": "node dist/index.js",
     "vercel-build": "echo hello"
@@ -35,7 +35,8 @@
     "passport-google-oauth20": "^2.0.0",
     "redis": "^5.1.1",
     "sharp": "^0.34.3",
-    "twilio": "^5.8.2"
+    "twilio": "^5.8.2",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

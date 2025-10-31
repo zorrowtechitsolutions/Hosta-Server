@@ -82,6 +82,7 @@ const workingHoursClinicSchema = new Schema({
 
 // Booking Schema
 const bookingSchema = new Schema({
+    patient_name : { type: String },   patient_phone : { type: String },  patient_place : { type: String },   patient_dob : { type: String }, 
    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
