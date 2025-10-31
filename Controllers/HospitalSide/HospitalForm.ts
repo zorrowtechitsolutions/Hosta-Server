@@ -967,3 +967,18 @@ export const updateDoctorBookingStatus = async (
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+
+export const getSingleHospital = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { id } = req.params;
+
+  if (!id) throw new createError.BadRequest("Invalid hospital ID");
+
+  const hospital = await Hospital.findById(id);
+  if (!hospital) throw new createError.NotFound("hospital not found");
+
+  return res.status(200).json(hospital);
+};
